@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Request Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1B2430;
+  --paper:#F3F1EC;
+  --panel:#FFFFFF;
+  --line:#E4E0D6;
+  --line-strong:#CFC9BB;
+  --teal:#2B6E62;
+  --teal-dark:#1E4F46;
+  --teal-tint:#E4EFEC;
+  --amber:#C97A2B;
+  --amber-tint:#FBEDDE;
+  --red:#B5473A;
+  --red-tint:#F7E4E0;
+  --purple:#6E5B9E;
+  --purple-tint:#EBE6F5;
+  --blue:#3B6EA5;
+  --blue-tint:#E4EDF5;
+  --slate:#6B7280;
+  --slate-tint:#EFEFEC;
+  --green:#3F8F5F;
+  --green-tint:#E4F1E8;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,.disp{font-family:'Sora',sans-serif;letter-spacing:-0.01em;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+#app{min-height:100vh;display:flex;flex-direction:column;}
+a{color:inherit;}
+
+/* ---------- Layout shell ---------- */
+.topbar{
+  display:flex;align-items:center;gap:18px;
+  padding:14px 24px;background:var(--ink);color:#fff;
+  position:sticky;top:0;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:700;font-size:16px;white-space:nowrap;}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;}
+.nav{display:flex;gap:4px;flex:1;overflow-x:auto;}
+.nav button{
+  background:transparent;border:none;color:#C9CFD6;padding:8px 12px;border-radius:7px;
+  font-size:13.5px;font-weight:600;white-space:nowrap;
+}
+.nav button.active{background:rgba(255,255,255,0.12);color:#fff;}
+.nav button:hover{color:#fff;}
+.searchbox{position:relative;}
+.searchbox input{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#fff;
+  border-radius:7px;padding:7px 10px 7px 30px;font-size:13px;width:190px;
+}
+.searchbox input::placeholder{color:#9AA2AC;}
+.searchbox svg{position:absolute;left:8px;top:8px;width:14px;height:14px;stroke:#9AA2AC;}
+.userchip{font-size:12.5px;color:#C9CFD6;background:rgba(255,255,255,0.1);padding:6px 10px;border-radius:20px;white-space:nowrap;}
+
+main{flex:1;padding:26px 28px 60px;max-width:1280px;margin:0 auto;width:100%;}
+
+/* ---------- Buttons ---------- */
+.btn{border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+  padding:8px 14px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--ink);}
+.btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+.btn-primary:hover{background:var(--teal-dark);border-color:var(--teal-dark);}
+.btn-danger{background:var(--red);border-color:var(--red);color:#fff;}
+.btn-danger:hover{background:#8f3a30;}
+.btn-ghost{background:transparent;border-color:transparent;}
+.btn-ghost:hover{background:var(--slate-tint);}
+.btn-sm{padding:5px 10px;font-size:12.5px;}
+.btn:disabled{opacity:0.45;cursor:not-allowed;}
+
+/* ---------- Cards / panels ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.pagehead h1{font-size:24px;margin:0 0 4px;}
+.pagehead .sub{color:var(--slate);font-size:13.5px;}
+.section-title{font-size:14px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px;}
+
+/* ---------- Status pills ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;}
+.pill-dot{width:6px;height:6px;border-radius:50%;}
+
+/* ---------- Event card ---------- */
+.evcard{display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:box-shadow .12s,transform .12s;}
+.evcard:hover{box-shadow:0 6px 18px rgba(27,36,48,0.08);transform:translateY(-1px);}
+.evcard h3{margin:0;font-size:17px;}
+.evcard .meta{color:var(--slate);font-size:12.5px;display:flex;gap:10px;flex-wrap:wrap;}
+.countdown{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
+.countdown .n{font-family:'Sora',sans-serif;font-weight:800;font-size:26px;line-height:1;}
+.countdown .lbl{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;opacity:.85;}
+.stat-row{display:flex;gap:14px;font-size:12.5px;color:var(--slate);}
+.stat-row b{color:var(--ink);font-size:13.5px;}
+.progressbar{height:7px;border-radius:5px;background:var(--slate-tint);overflow:hidden;}
+.progressbar > div{height:100%;background:var(--teal);}
+
+/* ---------- Table ---------- */
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;color:var(--slate);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;padding:9px 10px;border-bottom:1px solid var(--line);}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr.rowlink{cursor:pointer;}
+tr.rowlink:hover td{background:var(--slate-tint);}
+select.statusselect{border:1px solid var(--line-strong);border-radius:7px;padding:4px 6px;font-size:12.5px;font-weight:700;background:#fff;appearance:none;-webkit-appearance:none;}
+tr.row-na td{color:var(--slate) !important;background:#F7F6F3;}
+tr.row-na .pill{filter:grayscale(1);opacity:.7;}
+
+/* ---------- Filters ---------- */
+.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.chip{border:1px solid var(--line-strong);background:#fff;border-radius:20px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--slate);}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.filterbar select{border:1px solid var(--line-strong);border-radius:20px;padding:5px 10px;font-size:12.5px;background:#fff;}
+
+/* ---------- Forms / modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,24,30,0.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;}
+.modal.wide{max-width:760px;}
+.modal h2{margin:0 0 4px;font-size:19px;}
+.modal .sub{color:var(--slate);font-size:12.5px;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--slate);margin-bottom:5px;}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:13.5px;color:var(--ink);background:#fff;
+}
+.field textarea{resize:vertical;min-height:70px;}
+.field .hint, .hint{font-size:11.5px;color:var(--slate);margin-top:4px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;border-top:1px solid var(--line);padding-top:16px;}
+
+/* ---------- Drawer ---------- */
+.drawer-wrap{position:fixed;inset:0;background:rgba(20,24,30,0.4);z-index:90;display:flex;justify-content:flex-end;}
+.drawer{background:var(--paper);width:100%;max-width:640px;height:100%;overflow-y:auto;box-shadow:-8px 0 24px rgba(0,0,0,0.12);}
+.drawer-head{background:var(--ink);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:sticky;top:0;z-index:5;}
+.drawer-head h2{margin:0 0 2px;font-size:18px;}
+.drawer-head .sub{color:#B9C6C3;font-size:12px;}
+.drawer-body{padding:20px 22px;}
+.drawer-close{background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:7px;width:28px;height:28px;font-size:15px;flex-shrink:0;}
+.tabbar{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;}
+.tabbar button{background:transparent;border:none;padding:9px 4px;margin-right:16px;font-size:13px;font-weight:600;color:var(--slate);border-bottom:2px solid transparent;}
+.tabbar button.active{color:var(--ink);border-color:var(--teal);}
+.subpanel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;}
+.subpanel h4{margin:0 0 10px;font-size:13px;}
+
+/* ---------- Sponsor chip / file row / activity ---------- */
+.sponsor-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:8px;background:#fff;}
+.sponsor-chip img{width:28px;height:28px;object-fit:contain;border-radius:5px;background:var(--slate-tint);}
+.sponsor-chip .logo-fallback{width:28px;height:28px;border-radius:5px;background:var(--slate-tint);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--slate);flex-shrink:0;}
+.sponsor-chip .name{font-weight:600;font-size:13px;}
+.sponsor-chip .lvl{font-size:11px;color:var(--slate);}
+.filerow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:8px;background:#fff;cursor:pointer;transition:box-shadow .12s,border-color .12s;}
+.filerow:hover{border-color:var(--teal);box-shadow:0 2px 8px rgba(43,110,98,0.1);}
+.filerow .thumb{width:38px;height:38px;border-radius:6px;object-fit:cover;background:var(--slate-tint);flex-shrink:0;}
+.filerow .name{font-size:12.5px;font-weight:600;}
+.filerow .meta{font-size:11px;color:var(--slate);}
+.filerow .notepreview{font-size:11.5px;color:var(--ink);background:var(--amber-tint);border-radius:6px;padding:3px 8px;margin-top:4px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.timeline{position:relative;padding-left:18px;}
+.timeline::before{content:'';position:absolute;left:4px;top:4px;bottom:4px;width:2px;background:var(--line);}
+.tl-item{position:relative;padding-bottom:14px;}
+.tl-item::before{content:'';position:absolute;left:-18px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:0 0 0 1px var(--line);}
+.tl-item .txt{font-size:12.5px;}
+.tl-item .when{font-size:11px;color:var(--slate);}
+
+/* ---------- Empty state ---------- */
+.empty{text-align:center;padding:40px 20px;color:var(--slate);}
+.empty .big{font-size:32px;margin-bottom:6px;}
+.empty h4{color:var(--ink);margin:0 0 4px;font-size:15px;}
+.empty p{font-size:13px;margin:0 0 14px;}
+
+/* ---------- toast ---------- */
+#toastwrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,0.2);animation:slidein .15s ease-out;}
+.toast.err{background:var(--red);}
+@keyframes slidein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.icon-btn{background:transparent;border:none;color:var(--slate);padding:4px;border-radius:6px;}
+.icon-btn:hover{background:var(--slate-tint);color:var(--ink);}
+.templist-row{display:grid;grid-template-columns:26px 1fr 130px 110px 90px;gap:10px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line);font-size:12.5px;}
+.templist-row input,.templist-row select{border:1px solid var(--line-strong);border-radius:6px;padding:5px 6px;font-size:12px;width:100%;}
+.reqbox{background:#fff;border:1px dashed var(--line-strong);border-radius:10px;padding:14px;}
+.reqbox textarea{width:100%;min-height:150px;border:none;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;}
+.small-muted{color:var(--slate);font-size:12px;}
+label.checkline{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;margin-bottom:6px;}
+.loading-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:10px;color:var(--slate);font-size:13.5px;}
+@media (max-width:720px){
+  .field-row{grid-template-columns:1fr;}
+  .templist-row{grid-template-columns:1fr;}
+  .drawer{max-width:100%;}
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading-screen">Loading planner…</div></div>
+<div id="toastwrap"></div>
+
+<script type="module">
+/* =========================================================================
+   DESIGN REQUEST PLANNER
+   Single-file app. Data persists in Firestore (shared = whole team).
+   Your name is remembered locally in this browser only (localStorage).
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------
+   FIRESTORE SETUP — your project's config, from the Firebase console.
+   --------------------------------------------------------------------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC9SqJ4KJu4yvNB5vh7c0ku-aqbbfOAWKM",
+  authDomain: "design-project-planner.firebaseapp.com",
+  projectId: "design-project-planner",
+  storageBucket: "design-project-planner.firebasestorage.app",
+  messagingSenderId: "453144363375",
+  appId: "1:453144363375:web:7791917cb3492b7d73a89a"
+};
+const fbApp = initializeApp(firebaseConfig);
+const dbFs = getFirestore(fbApp);
+const COLLECTION = 'designPlanner'; // one flat collection, doc id = storage key
+
+const STATUSES = [
+  {id:'not_started', label:'Not started', color:'slate'},
+  {id:'ready', label:'Ready to request', color:'blue'},
+  {id:'requested', label:'Requested', color:'amber'},
+  {id:'in_progress', label:'In progress', color:'amber'},
+  {id:'awaiting_approval', label:'Awaiting approval', color:'purple'},
+  {id:'amendments_required', label:'Amendments required', color:'red'},
+  {id:'re_requested', label:'Re-requested', color:'amber'},
+  {id:'approved', label:'Approved', color:'teal'},
+  {id:'complete', label:'Complete', color:'green'},
+  {id:'na', label:'N/A', color:'slate'},
+];
+const AMEND_STATUSES = [
+  {id:'requested', label:'Requested', color:'amber'},
+  {id:'in_progress', label:'In progress', color:'amber'},
+  {id:'awaiting_approval', label:'Awaiting approval', color:'purple'},
+  {id:'further_amendments', label:'Further amendments required', color:'red'},
+  {id:'approved', label:'Approved', color:'teal'},
+  {id:'complete', label:'Complete', color:'green'},
+];
+const APPROVAL_OPTS = ['Awaiting review','Approved','Not approved','Amendments required','Re-requested'];
+
+const DEFAULT_TEMPLATE_NAMES = [
+"Countdown banners","Badge Paper","Lanyard","Bag","Day Planner","Registration","Sponsors Pop Up",
+"Partner Pop Up","See you Next Year Pop up","Agenda Panels","Welcome to Pop Up","Meet the Buyer Pop Up",
+"Lectern","GO Excellence Zone Fascia","Wall stickers","Training zone panels","Zone graphics","Video Slides",
+"Presentation Slides","You are here floorplan","Keynote Graphic","Directional Pop ups",
+"Partner Pavilion graphics","LED graphics - SG Conf/Live Studio","Hanging Zone Banners","Floor tiles",
+"Digital signage","Catering pop-up","Media/ filming wall"
+];
+
+function uid(p){ return (p||'id')+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+function nowIso(){ return new Date().toISOString(); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtDateTime(iso){ const dt=new Date(iso); return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function daysUntil(d){ if(!d) return null; const today=new Date(); today.setHours(0,0,0,0); const target=new Date(d+'T00:00:00'); return Math.round((target-today)/86400000); }
+function weeksUntil(d){ const days=daysUntil(d); if(days===null) return null; return Math.floor(days/7); }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function statusMeta(list,id){ return list.find(s=>s.id===id) || list[0]; }
+
+function toast(msg, isErr){
+  const el=document.createElement('div');
+  el.className='toast'+(isErr?' err':'');
+  el.textContent=msg;
+  document.getElementById('toastwrap').appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+
+/* ---------------------------------------------------------------------
+   STORAGE LAYER — Firestore, one doc per key in the "designPlanner"
+   collection. The "shared" flag is kept for API compatibility but every
+   key here is shared (there's no per-user auth in this build).
+   --------------------------------------------------------------------- */
+async function sget(key, shared){
+  try{
+    const snap = await getDoc(doc(dbFs, COLLECTION, key));
+    return snap.exists() ? snap.data().value : null;
+  } catch(e){ console.error('Firestore read failed', key, e); return null; }
+}
+async function sset(key, value, shared){
+  try{
+    await setDoc(doc(dbFs, COLLECTION, key), { value, updatedAt: Date.now() });
+    return true;
+  } catch(e){ console.error('Firestore write failed', key, e); toast('Save failed — check your connection or Firestore rules', true); return false; }
+}
+async function slist(prefix, shared){
+  try{
+    const snaps = await getDocs(collection(dbFs, COLLECTION));
+    const keys = [];
+    snaps.forEach(d=>{ if(!prefix || d.id.startsWith(prefix)) keys.push(d.id); });
+    return keys;
+  } catch(e){ console.error('Firestore list failed', e); return []; }
+}
+
+const DB = {
+  template: [],
+  designers: ['Jamie','Seamus'],
+  settings: { thresholds:{onTrack:6,keepMoving:4,attention:2}, sponsorLevels:['Headline Sponsor','Gold Sponsor','Keynote Sponsor','Zone Sponsor','Exhibitor','Partner'], mondayBoardId:'' },
+  events: {},        // id -> event object
+  eventOrder: [],     // array of ids, newest first
+  designs: {},        // eventId -> array
+  sponsors: {},        // eventId -> array
+  amendments: {},        // eventId -> array
+};
+let currentUser = '';
+
+async function loadAll(){
+  const [tpl, desg, sett, evIndex] = await Promise.all([
+    sget('template', true), sget('designers', true), sget('settings', true),
+    sget('eventIndex', true)
+  ]);
+  DB.template = tpl ? JSON.parse(tpl) : DEFAULT_TEMPLATE_NAMES.map((n,i)=>({id:uid('tpl'),name:n,order:i,dimensions:'',designer:'',instructions:'',sponsorsCommon:false}));
+  DB.designers = desg ? JSON.parse(desg) : DB.designers;
+  DB.settings = sett ? JSON.parse(sett) : DB.settings;
+  DB.eventOrder = evIndex ? JSON.parse(evIndex) : [];
+  currentUser = localStorage.getItem('designPlannerUser') || '';
+
+  if(!tpl) await sset('template', JSON.stringify(DB.template), true);
+  if(!desg) await sset('designers', JSON.stringify(DB.designers), true);
+  if(!sett) await sset('settings', JSON.stringify(DB.settings), true);
+
+  // load events referenced by index (fallback: scan)
+  let ids = DB.eventOrder;
+  if(!ids.length){
+    const keys = await slist('event:', true);
+    ids = keys.map(k=>k.replace('event:',''));
+  }
+  const results = await Promise.all(ids.map(id=>sget('event:'+id, true)));
+  DB.eventOrder = [];
+  ids.forEach((id,i)=>{
+    if(results[i]){ DB.events[id]=JSON.parse(results[i]); DB.eventOrder.push(id); }
+  });
+  // sort newest created first
+  DB.eventOrder.sort((a,b)=> (DB.events[b].createdAt||'').localeCompare(DB.events[a].createdAt||''));
+
+  const [designsRes, sponsorsRes, amendRes] = await Promise.all([
+    Promise.all(DB.eventOrder.map(id=>sget('designs:'+id, true))),
+    Promise.all(DB.eventOrder.map(id=>sget('sponsors:'+id, true))),
+    Promise.all(DB.eventOrder.map(id=>sget('amendments:'+id, true))),
+  ]);
+  DB.eventOrder.forEach((id,i)=>{
+    DB.designs[id] = designsRes[i] ? JSON.parse(designsRes[i]) : [];
+    DB.sponsors[id] = sponsorsRes[i] ? JSON.parse(sponsorsRes[i]) : [];
+    DB.amendments[id] = amendRes[i] ? JSON.parse(amendRes[i]) : [];
+  });
+}
+
+async function saveEvent(ev){ DB.events[ev.id]=ev; await sset('event:'+ev.id, JSON.stringify(ev), true); }
+async function saveEventIndex(){ await sset('eventIndex', JSON.stringify(DB.eventOrder), true); }
+async function saveDesigns(eventId){ await sset('designs:'+eventId, JSON.stringify(DB.designs[eventId]||[]), true); }
+async function saveSponsors(eventId){ await sset('sponsors:'+eventId, JSON.stringify(DB.sponsors[eventId]||[]), true); }
+async function saveAmendments(eventId){ await sset('amendments:'+eventId, JSON.stringify(DB.amendments[eventId]||[]), true); }
+async function saveTemplate(){ await sset('template', JSON.stringify(DB.template), true); }
+async function saveDesigners(){ await sset('designers', JSON.stringify(DB.designers), true); }
+async function saveSettings(){ await sset('settings', JSON.stringify(DB.settings), true); }
+
+/* ---------------------------------------------------------------------
+   STATE
+   --------------------------------------------------------------------- */
+const state = {
+  page:'dashboard',        // dashboard | event | template | timeline | settings
+  eventId:null,
+  eventTab:'overview',     // overview | planner | sponsors | amendments | activity
+  showArchived:false,
+  designFilter:'all',
+  designerFilter:'all',
+  drawerDesignId:null,
+  drawerAmendId:null,
+  searchQuery:'',
+  modal:null,               // {type:'newEvent'|'confirmDelete'|...}
+};
+
+function setState(patch){ Object.assign(state, patch); render(); }
+
+/* ---------------------------------------------------------------------
+   DERIVED HELPERS
+   --------------------------------------------------------------------- */
+function eventStats(eventId){
+  const designs = (DB.designs[eventId]||[]).filter(d=>d.status!=='na');
+  const total = designs.length;
+  const complete = designs.filter(d=>d.status==='complete'||d.status==='approved').length;
+  const outstanding = designs.filter(d=>!['complete','approved'].includes(d.status)).length;
+  const notRequested = designs.filter(d=>['not_started','ready'].includes(d.status)).length;
+  const awaiting = designs.filter(d=>d.status==='awaiting_approval').length;
+  const amendCount = (DB.amendments[eventId]||[]).filter(a=>!['complete','approved'].includes(a.status)).length;
+  const pct = total? Math.round((complete/total)*100) : 0;
+  return {total,complete,outstanding,notRequested,awaiting,amendCount,pct};
+}
+function urgencyLevel(weeks){
+  const t = DB.settings.thresholds;
+  if(weeks===null) return {label:'No deadline set',cls:'slate'};
+  if(weeks>=t.onTrack) return {label:'On track',cls:'teal'};
+  if(weeks>=t.keepMoving) return {label:'Keep moving',cls:'blue'};
+  if(weeks>=t.attention) return {label:'Attention needed',cls:'amber'};
+  return {label:'Urgent',cls:'red'};
+}
+function colorVars(name){
+  return {bg:`var(--${name}-tint, var(--slate-tint))`, fg:`var(--${name}, var(--slate))`};
+}
+function pillHtml(label,color){
+  return `<span class="pill" style="background:var(--${color}-tint,var(--slate-tint));color:var(--${color},var(--slate));">
+    <span class="pill-dot" style="background:var(--${color},var(--slate));"></span>${escapeHtml(label)}</span>`;
+}
+
+/* ---------------------------------------------------------------------
+   RENDER: SHELL
+   --------------------------------------------------------------------- */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${renderTopbar()}
+    <main>${renderPage()}</main>
+    ${state.modal ? renderModal() : ''}
+    ${state.drawerDesignId ? renderDesignDrawer() : ''}
+    ${state.drawerAmendId ? renderAmendDrawer() : ''}
+  `;
+  bindGlobalEvents();
+}
+
+function renderTopbar(){
+  const navItems = [
+    ['dashboard','Dashboard'],['timeline','Requests Timeline'],['template','Design Template'],['settings','Settings']
+  ];
+  return `
+  <div class="topbar">
+    <div class="brand"><span class="mark">DP</span> Design Request Planner</div>
+    <div class="nav">
+      ${navItems.map(([id,label])=>`<button data-nav="${id}" class="${state.page===id?'active':''}">${label}</button>`).join('')}
+    </div>
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="globalsearch" placeholder="Search everything…" value="${escapeHtml(state.searchQuery)}">
+    </div>
+    <button class="userchip" id="userchipbtn">${currentUser? '👤 '+escapeHtml(currentUser) : 'Set your name'}</button>
+  </div>`;
+}
+
+function renderPage(){
+  if(state.searchQuery.trim().length>1) return renderSearchResults();
+  switch(state.page){
+    case 'dashboard': return renderDashboard();
+    case 'event': return renderEventPage();
+    case 'template': return renderTemplatePage();
+    case 'timeline': return renderTimelinePage();
+    case 'settings': return renderSettingsPage();
+    default: return renderDashboard();
+  }
+}
+
+/* ---------------------------------------------------------------------
+   DASHBOARD
+   --------------------------------------------------------------------- */
+function renderDashboard(){
+  const ids = DB.eventOrder.filter(id=> DB.events[id] && !!DB.events[id].archived === state.showArchived);
+  return `
+  <div class="pagehead">
+    <div>
+      <h1>${state.showArchived?'Archived events':'Active events'}</h1>
+      <div class="sub">${ids.length} event${ids.length===1?'':'s'} ${state.showArchived?'archived':'in flight'}</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" data-action="toggle-archived">${state.showArchived?'← Back to active':'View archived'}</button>
+      ${!state.showArchived?'<button class="btn btn-primary" data-action="open-new-event">+ Add New Event</button>':''}
+    </div>
+  </div>
+  ${ids.length===0 ? renderEmpty('🎪','No events here yet', state.showArchived? "Nothing archived. That's a good thing.":"Kick things off — add your first event and I'll load in the standard design list automatically.", state.showArchived?null:['open-new-event','+ Add New Event']) : `
+  <div class="grid-cards">${ids.map(id=>renderEventCard(id)).join('')}</div>`}
+  `;
+}
+
+function renderEmpty(emoji,title,body,actionBtn){
+  return `<div class="empty card">
+    <div class="big">${emoji}</div>
+    <h4>${escapeHtml(title)}</h4>
+    <p>${escapeHtml(body)}</p>
+    ${actionBtn?`<button class="btn btn-primary" data-action="${actionBtn[0]}">${actionBtn[1]}</button>`:''}
+  </div>`;
+}
+
+function renderEventCard(id){
+  const ev = DB.events[id];
+  const stats = eventStats(id);
+  const weeks = weeksUntil(ev.printDeadline);
+  const days = daysUntil(ev.printDeadline);
+  const urg = urgencyLevel(weeks);
+  return `
+  <div class="card evcard" data-open-event="${id}">
+    <div>
+      <h3>${escapeHtml(ev.name)}</h3>
+      <div class="meta">
+        <span>📅 ${fmtDate(ev.date)}</span>
+        ${ev.venue?`<span>📍 ${escapeHtml(ev.venue)}</span>`:''}
+      </div>
+    </div>
+    <div class="countdown" style="background:var(--${urg.cls}-tint,var(--slate-tint));color:var(--${urg.cls},var(--slate));">
+      <div class="n">${days===null?'—':(days<0? Math.abs(days)+'d overdue' : days+' days')}</div>
+      <div class="lbl">${ev.printDeadline? 'Print deadline '+fmtDate(ev.printDeadline)+' · '+urg.label : 'No print deadline set'}</div>
+    </div>
+    <div class="stat-row">
+      <span><b>${stats.total}</b> items</span>
+      <span><b>${stats.complete}</b> complete</span>
+      <span><b>${stats.outstanding}</b> outstanding</span>
+      ${stats.amendCount>0?`<span style="color:var(--red);"><b>${stats.amendCount}</b> amend. open</span>`:''}
+    </div>
+    <div class="progressbar"><div style="width:${stats.pct}%;"></div></div>
+    <div class="small-muted">${stats.pct}% complete</div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   EVENT PAGE (Overview / Planner / Sponsors / Amendments / Activity)
+   --------------------------------------------------------------------- */
+function renderEventPage(){
+  const ev = DB.events[state.eventId];
+  if(!ev) return renderEmpty('🤔','Event not found','It may have been deleted. Head back to the dashboard.',['nav-dashboard','← Back to dashboard']);
+  const tabs = [['overview','Overview'],['planner','Design Planner'],['sponsors','Sponsors'],['amendments','Amendments'],['activity','Activity']];
+  return `
+  <div class="pagehead">
+    <div>
+      <button class="btn btn-ghost btn-sm" data-action="nav-dashboard" style="margin-bottom:6px;">← All events</button>
+      <h1>${escapeHtml(ev.name)}</h1>
+      <div class="sub">${fmtDate(ev.date)}${ev.venue?' · '+escapeHtml(ev.venue):''}${ev.defaultDesigner?' · Default designer: '+escapeHtml(ev.defaultDesigner):''}</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm" data-action="edit-event">Edit details</button>
+      <button class="btn btn-sm" data-action="duplicate-event">Duplicate event</button>
+      ${ev.archived
+        ? `<button class="btn btn-sm" data-action="unarchive-event">Unarchive</button>`
+        : `<button class="btn btn-sm" data-action="archive-event">Archive</button>`}
+      <button class="btn btn-sm btn-danger" data-action="delete-event">Delete</button>
+    </div>
+  </div>
+  <div class="tabbar">
+    ${tabs.map(([id,label])=>`<button data-etab="${id}" class="${state.eventTab===id?'active':''}">${label}</button>`).join('')}
+  </div>
+  ${state.eventTab==='overview'?renderEventOverview(ev):''}
+  ${state.eventTab==='planner'?renderEventPlanner(ev):''}
+  ${state.eventTab==='sponsors'?renderEventSponsors(ev):''}
+  ${state.eventTab==='amendments'?renderEventAmendments(ev):''}
+  ${state.eventTab==='activity'?renderEventActivity(ev):''}
+  `;
+}
+
+function renderEventOverview(ev){
+  const stats = eventStats(ev.id);
+  const weeks = weeksUntil(ev.printDeadline);
+  const days = daysUntil(ev.printDeadline);
+  const urg = urgencyLevel(weeks);
+  const urgentDesigns = (DB.designs[ev.id]||[]).filter(d=> d.deadline && daysUntil(d.deadline)!==null && daysUntil(d.deadline)<=14 && !['complete','approved','na'].includes(d.status));
+  return `
+  <div class="grid-cards" style="margin-bottom:18px;">
+    <div class="card">
+      <div class="section-title">Print deadline</div>
+      <div style="font-size:20px;font-weight:700;">${ev.printDeadline? fmtDate(ev.printDeadline):'Not set'}</div>
+      <div style="color:var(--${urg.cls},var(--slate));font-weight:700;font-size:13px;margin-top:2px;">${days===null?'—':(days<0? Math.abs(days)+' days overdue' : days+' days · '+weeks+' weeks')} — ${urg.label}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Design progress</div>
+      <div style="font-size:20px;font-weight:700;">${stats.complete} / ${stats.total} complete</div>
+      <div class="progressbar" style="margin-top:8px;"><div style="width:${stats.pct}%;"></div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Not yet requested</div>
+      <div style="font-size:20px;font-weight:700;">${stats.notRequested}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Awaiting approval</div>
+      <div style="font-size:20px;font-weight:700;">${stats.awaiting}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Amendments outstanding</div>
+      <div style="font-size:20px;font-weight:700;color:${stats.amendCount>0?'var(--red)':'inherit'};">${stats.amendCount}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Needs attention in the next 2 weeks</div>
+    ${urgentDesigns.length===0 ? '<p class="small-muted">Nothing urgent right now.</p>' : `
+    <table><thead><tr><th>Design</th><th>Status</th><th>Deadline</th><th>Designer</th></tr></thead><tbody>
+    ${urgentDesigns.map(d=>`<tr class="rowlink" data-open-design="${d.id}">
+      <td>${escapeHtml(d.name)}</td><td>${pillHtml(statusMeta(STATUSES,d.status).label,statusMeta(STATUSES,d.status).color)}</td>
+      <td>${fmtDate(d.deadline)}</td><td>${escapeHtml(d.designer||'—')}</td></tr>`).join('')}
+    </tbody></table>`}
+  </div>
+  ${ev.notes?`<div class="card" style="margin-top:14px;"><div class="section-title">Event notes</div><p style="font-size:13.5px;white-space:pre-wrap;">${escapeHtml(ev.notes)}</p></div>`:''}
+  `;
+}
+
+function renderEventPlanner(ev){
+  let designs = DB.designs[ev.id]||[];
+  const filters = ['all','outstanding','ready','awaiting_approval','amendments_required','approved','complete','na'];
+  const filterLabels = {all:'All',outstanding:'Outstanding',ready:'Ready to request',awaiting_approval:'Awaiting approval',amendments_required:'Amendments required',approved:'Approved',complete:'Complete',na:'N/A'};
+  if(state.designFilter==='outstanding') designs = designs.filter(d=>!['complete','approved','na'].includes(d.status));
+  else if(state.designFilter!=='all') designs = designs.filter(d=>d.status===state.designFilter);
+  if(state.designerFilter!=='all') designs = designs.filter(d=>d.designer===state.designerFilter);
+
+  return `
+  <div class="filterbar">
+    ${filters.map(f=>`<button class="chip ${state.designFilter===f?'active':''}" data-designfilter="${f}">${filterLabels[f]}</button>`).join('')}
+    <select id="designerfilter">
+      <option value="all" ${state.designerFilter==='all'?'selected':''}>All designers</option>
+      ${DB.designers.map(d=>`<option value="${escapeHtml(d)}" ${state.designerFilter===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}
+    </select>
+    <div style="flex:1;"></div>
+    <button class="btn btn-sm btn-primary" data-action="add-design">+ Add design</button>
+  </div>
+  ${designs.length===0 ? renderEmpty('🎨','No designs match','Try a different filter, or add a custom design request for this event.',['add-design','+ Add design']) : `
+  <div class="card" style="padding:0;overflow-x:auto;">
+  <table>
+    <thead><tr><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Sponsors</th><th>Deadline</th><th></th></tr></thead>
+    <tbody>
+    ${designs.map(d=>{
+      const sm = statusMeta(STATUSES,d.status);
+      const sponsorNames = (d.sponsors||[]).map(s=>{const sp=(DB.sponsors[ev.id]||[]).find(x=>x.id===s.sponsorId); return sp?sp.name:null;}).filter(Boolean);
+      const isNa = d.status==='na';
+      return `<tr class="rowlink${isNa?' row-na':''}" data-open-design="${d.id}">
+        <td><b>${escapeHtml(d.name)}</b>${d.custom?'<span class="small-muted"> · custom</span>':''}</td>
+        <td onclick="event.stopPropagation()">
+          <select class="statusselect" data-inline-status="${d.id}" style="background:var(--${sm.color}-tint,var(--slate-tint));color:var(--${sm.color},var(--slate));border-color:var(--${sm.color},var(--line-strong));">
+          ${STATUSES.map(s=>`<option value="${s.id}" ${s.id===d.status?'selected':''}>${s.label}</option>`).join('')}
+          </select>
+        </td>
+        <td>${escapeHtml(d.designer||'—')}</td>
+        <td>${escapeHtml(d.requestedBy||'—')}</td>
+        <td>${d.requestedDate? fmtDateTime(d.requestedDate) : '<span class="small-muted">—</span>'}</td>
+        <td>${sponsorNames.length? escapeHtml(sponsorNames.join(', ')) : '<span class="small-muted">—</span>'}</td>
+        <td>${d.deadline? fmtDate(d.deadline) : '<span class="small-muted">—</span>'}</td>
+        <td onclick="event.stopPropagation()"><button class="icon-btn" data-action="duplicate-design" data-id="${d.id}" title="Duplicate">⧉</button></td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`}
+  `;
+}
+
+function renderEventSponsors(ev){
+  const sponsors = DB.sponsors[ev.id]||[];
+  return `
+  <div class="pagehead" style="margin-bottom:14px;">
+    <div><h1 style="font-size:18px;">Event sponsors</h1><div class="sub">Sponsors available to attach to any design in this event.</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm btn-primary" data-action="add-sponsor-new">+ New sponsor</button>
+    </div>
+  </div>
+  ${sponsors.length===0 ? renderEmpty('🏷️','No sponsors added yet','Add a sponsor from your library, or create a new one for this event.',['add-sponsor-new','+ New sponsor']) : `
+  <div class="grid-cards">
+  ${sponsors.map(sp=>`
+    <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:10px;align-items:center;">
+        ${sp.logo?`<img src="${sp.logo}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:var(--slate-tint);">`:`<div class="logo-fallback" style="width:44px;height:44px;font-size:14px;">${escapeHtml((sp.name||'?').slice(0,2).toUpperCase())}</div>`}
+        <div>
+          <div style="font-weight:700;">${escapeHtml(sp.name)}</div>
+          <div class="small-muted">${escapeHtml(sp.level||'—')}</div>
+        </div>
+      </div>
+      ${sp.notes?`<div class="small-muted">${escapeHtml(sp.notes)}</div>`:''}
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" data-action="edit-sponsor" data-id="${sp.id}">Edit</button>
+        <button class="btn btn-sm" data-action="upload-sponsor-logo" data-id="${sp.id}">Logo</button>
+        <button class="btn btn-sm btn-danger" data-action="remove-event-sponsor" data-id="${sp.id}">Remove</button>
+      </div>
+    </div>
+  `).join('')}
+  </div>`}
+  `;
+}
+
+function renderEventAmendments(ev){
+  const amends = DB.amendments[ev.id]||[];
+  return `
+  <div class="pagehead" style="margin-bottom:14px;">
+    <div><h1 style="font-size:18px;">Design edits / amendments</h1><div class="sub">Every amendment requested for this event, in one place.</div></div>
+    <button class="btn btn-sm btn-primary" data-action="add-amendment">+ New amendment</button>
+  </div>
+  ${amends.length===0 ? renderEmpty('✏️','No amendments yet','When a design comes back needing changes, log it here so nothing gets lost.',['add-amendment','+ New amendment']) : `
+  <div class="card" style="padding:0;overflow-x:auto;">
+  <table><thead><tr><th>Title</th><th>Related design</th><th>Status</th><th>Designer</th><th>Requested</th></tr></thead><tbody>
+  ${amends.map(a=>{
+    const design = (DB.designs[ev.id]||[]).find(d=>d.id===a.relatedDesignId);
+    const sm = statusMeta(AMEND_STATUSES,a.status);
+    return `<tr class="rowlink" data-open-amend="${a.id}">
+      <td><b>${escapeHtml(a.title)}</b></td>
+      <td>${design?escapeHtml(design.name):'<span class="small-muted">—</span>'}</td>
+      <td>${pillHtml(sm.label,sm.color)}</td>
+      <td>${escapeHtml(a.designer||'—')}</td>
+      <td>${a.dateRequested?fmtDate(a.dateRequested):'—'}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table></div>`}
+  `;
+}
+
+function renderEventActivity(ev){
+  const designs = DB.designs[ev.id]||[];
+  let items = [];
+  designs.forEach(d=> (d.activity||[]).forEach(a=> items.push({...a, designName:d.name})));
+  items.sort((a,b)=> b.ts.localeCompare(a.ts));
+  if(items.length===0) return renderEmpty('🕒','No activity yet','Status changes, uploads and approvals will show up here as your team works.',null);
+  return `<div class="card"><div class="timeline">
+  ${items.slice(0,80).map(a=>`<div class="tl-item"><div class="txt"><b>${escapeHtml(a.designName)}</b> — ${escapeHtml(a.text)}</div><div class="when">${fmtDateTime(a.ts)}${a.by?' · '+escapeHtml(a.by):''}</div></div>`).join('')}
+  </div></div>`;
+}
+
+/* ---------------------------------------------------------------------
+   TEMPLATE PAGE
+   --------------------------------------------------------------------- */
+function renderTemplatePage(){
+  const items = [...DB.template].sort((a,b)=>a.order-b.order);
+  return `
+  <div class="pagehead">
+    <div><h1>Design template</h1><div class="sub">The master list copied into every new event. Editing here never changes existing events.</div></div>
+    <button class="btn btn-primary" data-action="add-template-item">+ Add design type</button>
+  </div>
+  <div class="card">
+    <div class="templist-row" style="font-weight:700;color:var(--slate);font-size:11px;text-transform:uppercase;">
+      <div></div><div>Name</div><div>Default dimensions</div><div>Default designer</div><div>Sponsors?</div>
+    </div>
+    ${items.map((t,i)=>`
+    <div class="templist-row">
+      <div style="display:flex;flex-direction:column;">
+        <button class="icon-btn" data-action="tpl-up" data-id="${t.id}" ${i===0?'disabled':''}>▲</button>
+        <button class="icon-btn" data-action="tpl-down" data-id="${t.id}" ${i===items.length-1?'disabled':''}>▼</button>
+      </div>
+      <input data-tpl-field="name" data-id="${t.id}" value="${escapeHtml(t.name)}">
+      <input data-tpl-field="dimensions" data-id="${t.id}" value="${escapeHtml(t.dimensions||'')}" placeholder="e.g. 2m x 1m">
+      <select data-tpl-field="designer" data-id="${t.id}">
+        <option value="">—</option>
+        ${DB.designers.map(d=>`<option value="${escapeHtml(d)}" ${t.designer===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}
+      </select>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" data-tpl-field="sponsorsCommon" data-id="${t.id}" ${t.sponsorsCommon?'checked':''}>
+        <button class="icon-btn" data-action="tpl-delete" data-id="${t.id}" title="Delete">✕</button>
+      </div>
+    </div>`).join('')}
+  </div>
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   REQUESTS TIMELINE PAGE — every requested design, across every active
+   event, sorted by deadline. Drops off once approved or complete.
+   --------------------------------------------------------------------- */
+function renderTimelinePage(){
+  const activeStatuses = ['requested','in_progress','awaiting_approval','amendments_required','re_requested'];
+  let rows = [];
+  DB.eventOrder.forEach(id=>{
+    const ev = DB.events[id];
+    if(!ev || ev.archived) return;
+    (DB.designs[id]||[]).forEach(d=>{
+      if(!activeStatuses.includes(d.status)) return;
+      const effectiveDeadline = d.deadline || ev.printDeadline || null;
+      rows.push({ev, d, effectiveDeadline});
+    });
+  });
+  rows.sort((a,b)=>{
+    if(a.effectiveDeadline && b.effectiveDeadline) return a.effectiveDeadline.localeCompare(b.effectiveDeadline);
+    if(a.effectiveDeadline) return -1;
+    if(b.effectiveDeadline) return 1;
+    return 0;
+  });
+  return `
+  <div class="pagehead">
+    <div><h1>Requests Timeline</h1><div class="sub">Every design that's been requested, across all active events, ordered by deadline. Drops off this list once it's approved or complete.</div></div>
+  </div>
+  ${rows.length===0 ? renderEmpty('📋','Nothing outstanding','Once a design is marked "Requested" or later, it will show up here until it is approved.',null) : `
+  <div class="card" style="padding:0;overflow-x:auto;">
+  <table><thead><tr><th>Deadline</th><th>Event</th><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th></tr></thead><tbody>
+  ${rows.map(({ev,d,effectiveDeadline})=>{
+    const sm = statusMeta(STATUSES, d.status);
+    const days = daysUntil(effectiveDeadline);
+    const urg = urgencyLevel(weeksUntil(effectiveDeadline));
+    return `<tr class="rowlink" data-open-timeline="${ev.id}::${d.id}">
+      <td style="color:var(--${urg.cls},var(--slate));font-weight:700;">${effectiveDeadline? fmtDate(effectiveDeadline)+' ('+(days<0?Math.abs(days)+'d overdue':days+'d')+')' : '<span class="small-muted">No deadline</span>'}</td>
+      <td>${escapeHtml(ev.name)}</td>
+      <td><b>${escapeHtml(d.name)}</b>${!d.deadline && ev.printDeadline?'<span class="small-muted"> · using print deadline</span>':''}</td>
+      <td>${pillHtml(sm.label, sm.color)}</td>
+      <td>${escapeHtml(d.designer||'—')}</td>
+      <td>${escapeHtml(d.requestedBy||'—')}</td>
+      <td>${d.requestedDate?fmtDateTime(d.requestedDate):'—'}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table></div>`}
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   SETTINGS PAGE
+   --------------------------------------------------------------------- */
+function renderSettingsPage(){
+  const t = DB.settings.thresholds;
+  return `
+  <div class="pagehead"><div><h1>Settings</h1><div class="sub">Deadline thresholds, designers, and sponsor levels.</div></div></div>
+  <div class="grid-cards">
+    <div class="card">
+      <div class="section-title">Deadline thresholds (weeks remaining)</div>
+      <div class="field"><label>On track — at least this many weeks</label><input type="number" id="th-ontrack" value="${t.onTrack}"></div>
+      <div class="field"><label>Keep moving — at least this many weeks</label><input type="number" id="th-keepmoving" value="${t.keepMoving}"></div>
+      <div class="field"><label>Attention needed — at least this many weeks</label><input type="number" id="th-attention" value="${t.attention}"></div>
+      <div class="small-muted" style="margin-bottom:10px;">Below "Attention needed" is treated as Urgent.</div>
+      <button class="btn btn-primary btn-sm" data-action="save-thresholds">Save thresholds</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Designers</div>
+      ${DB.designers.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);">
+        <span>${escapeHtml(d)}</span><button class="icon-btn" data-action="remove-designer" data-name="${escapeHtml(d)}">✕</button></div>`).join('')}
+      <div class="field" style="margin-top:10px;"><input id="new-designer" placeholder="Add designer name"></div>
+      <button class="btn btn-sm" data-action="add-designer">+ Add designer</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Sponsor levels</div>
+      ${DB.settings.sponsorLevels.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);">
+        <span>${escapeHtml(l)}</span><button class="icon-btn" data-action="remove-level" data-name="${escapeHtml(l)}">✕</button></div>`).join('')}
+      <div class="field" style="margin-top:10px;"><input id="new-level" placeholder="Add sponsor level"></div>
+      <button class="btn btn-sm" data-action="add-level">+ Add level</button>
+    </div>
+    <div class="card">
+      <div class="section-title">Monday.com integration</div>
+      <div class="field"><label>Board ID</label><input id="th-mondayboard" value="${escapeHtml(DB.settings.mondayBoardId||'')}" placeholder="e.g. 1234567890"></div>
+      <p class="hint" style="margin-bottom:10px;">Find this in the board's URL: monday.com/boards/<b>1234567890</b>. This ID isn't secret — it's fine to store here. The actual API token lives only on the server, in Netlify's environment variables, never in this file.</p>
+      <button class="btn btn-primary btn-sm" data-action="save-monday-board">Save board ID</button>
+    </div>
+    <div class="card">
+      <div class="section-title">About this build</div>
+      <p class="small-muted">Data is stored in your Firestore project — everyone who opens this site shares the same events, sponsors and files. There's still no password login: "Set your name" is just a label stored in this browser, not real authentication. Firestore's default rules block all access, so you'll need to open your rules for this collection (or add Firebase Auth) before this works from anywhere but your own local testing — see console.firebase.google.com → your project → Firestore → Rules.</p>
+      <p class="small-muted" style="margin-top:8px;">Files are still stored as base64 inside Firestore documents (1MB per document limit), so uploads over a few hundred KB may fail. If that bites you, the next upgrade is Firebase Storage for the actual files, with just a URL saved in Firestore.</p>
+    </div>
+  </div>
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   SEARCH
+   --------------------------------------------------------------------- */
+function renderSearchResults(){
+  const q = state.searchQuery.toLowerCase();
+  let results = [];
+  DB.eventOrder.forEach(id=>{
+    const ev = DB.events[id];
+    if(ev.name.toLowerCase().includes(q)) results.push({type:'Event',label:ev.name,go:()=>{}, eventId:id});
+    (DB.designs[id]||[]).forEach(d=>{
+      if(d.name.toLowerCase().includes(q) || (d.notes||'').toLowerCase().includes(q)) results.push({type:'Design',label:d.name+' — '+ev.name,eventId:id,designId:d.id});
+    });
+    (DB.sponsors[id]||[]).forEach(s=>{
+      if(s.name.toLowerCase().includes(q)) results.push({type:'Sponsor',label:s.name+' — '+ev.name,eventId:id});
+    });
+    (DB.amendments[id]||[]).forEach(a=>{
+      if(a.title.toLowerCase().includes(q) || (a.description||'').toLowerCase().includes(q)) results.push({type:'Amendment',label:a.title+' — '+ev.name,eventId:id,amendId:a.id});
+    });
+  });
+  return `
+  <div class="pagehead"><div><h1>Search results</h1><div class="sub">${results.length} match${results.length===1?'':'es'} for "${escapeHtml(state.searchQuery)}"</div></div></div>
+  ${results.length===0? renderEmpty('🔍','Nothing found','Try a different term.',null) : `
+  <div class="card" style="padding:0;">
+  ${results.map((r,i)=>`<div class="rowlink" style="padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;" data-searchresult="${i}">
+    <span>${escapeHtml(r.label)}</span><span class="small-muted">${r.type}</span></div>`).join('')}
+  </div>`}
+  `;
+}
+window.__searchResultsCache = [];
+
+/* ---------------------------------------------------------------------
+   REQUEST TEXT GENERATOR
+   --------------------------------------------------------------------- */
+function generateRequestText(ev, d){
+  const sponsorsList = (d.sponsors||[]).map(s=>{
+    const sp = (DB.sponsors[ev.id]||[]).find(x=>x.id===s.sponsorId);
+    if(!sp) return null;
+    return s.wording ? s.wording : (sp.level ? `${sp.name} (${sp.level})` : sp.name);
+  }).filter(Boolean);
+  const fileNames = (d.files||[]).map(f=>f.name);
+  const lines = [];
+  lines.push('DESIGN REQUEST');
+  lines.push('');
+  lines.push(`Event: ${ev.name}`);
+  lines.push(`Design: ${d.name}`);
+  lines.push(`Designer: ${d.designer || 'Unassigned'}`);
+  lines.push(`Deadline: ${d.deadline ? fmtDate(d.deadline) : 'Not set'}`);
+  lines.push(`Dimensions: ${d.dimensions || 'Not specified'}`);
+  if(d.quantity) lines.push(`Quantity: ${d.quantity}`);
+  lines.push('');
+  lines.push(`Sponsors: ${sponsorsList.length ? sponsorsList.join('; ') : 'None'}`);
+  lines.push(`Reference files: ${fileNames.length ? fileNames.join(', ') : 'None attached'}`);
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push(d.notes ? d.notes : 'None provided.');
+  return lines.join('\n');
+}
+
+/* ---------------------------------------------------------------------
+   DRAWERS: DESIGN DETAIL
+   --------------------------------------------------------------------- */
+function findDesign(eventId, designId){ return (DB.designs[eventId]||[]).find(d=>d.id===designId); }
+
+function renderDesignDrawer(){
+  const ev = DB.events[state.eventId];
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  if(!ev || !d) return '';
+  const sm = statusMeta(STATUSES, d.status);
+  const eventSponsors = DB.sponsors[ev.id]||[];
+  const attached = (d.sponsors||[]).reduce((m,s)=>{m[s.sponsorId]=s.wording||''; return m;},{});
+  const genText = d._draftRequest !== undefined ? d._draftRequest : generateRequestText(ev,d);
+
+  return `
+  <div class="drawer-wrap" data-close-drawer="design">
+  <div class="drawer" data-stop>
+    <div class="drawer-head">
+      <div>
+        <div class="sub">${escapeHtml(ev.name)}</div>
+        <h2>${escapeHtml(d.name)}</h2>
+        <div style="margin-top:4px;">${pillHtml(sm.label,sm.color)}</div>
+      </div>
+      <button class="drawer-close" data-close-drawer="design">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <div class="subpanel">
+        <h4>Design information</h4>
+        <div class="field-row">
+          <div class="field"><label>Design title</label><input data-d-field="name" value="${escapeHtml(d.name)}"></div>
+          <div class="field"><label>Status</label>
+            <select data-d-field="status">${STATUSES.map(s=>`<option value="${s.id}" ${s.id===d.status?'selected':''}>${s.label}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Dimensions</label><input data-d-field="dimensions" value="${escapeHtml(d.dimensions||'')}"></div>
+          <div class="field"><label>Quantity</label><input data-d-field="quantity" value="${escapeHtml(d.quantity||'')}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Assigned designer</label>
+            <select data-d-field="designer"><option value="">—</option>${DB.designers.map(x=>`<option value="${escapeHtml(x)}" ${d.designer===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Request deadline</label><input type="date" data-d-field="deadline" value="${d.deadline||''}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Requested by</label><input data-d-field="requestedBy" value="${escapeHtml(d.requestedBy||'')}" placeholder="Set automatically when you copy a request"></div>
+          <div class="field"><label>Requested on</label><input type="date" data-d-field="requestedDate" value="${d.requestedDate? d.requestedDate.slice(0,10) : ''}"></div>
+        </div>
+        <div class="field"><label>Notes / instructions</label><textarea data-d-field="notes">${escapeHtml(d.notes||'')}</textarea></div>
+      </div>
+
+      <div class="subpanel">
+        <h4>Sponsors on this design</h4>
+        ${eventSponsors.length===0 ? `<p class="small-muted">No sponsors added to this event yet. Add sponsors under the Sponsors tab first.</p>` :
+        eventSponsors.map(sp=>`
+          <div class="sponsor-chip">
+            ${sp.logo?`<img src="${sp.logo}">`:`<div class="logo-fallback">${escapeHtml((sp.name||'?').slice(0,2).toUpperCase())}</div>`}
+            <div style="flex:1;">
+              <label class="checkline" style="margin-bottom:4px;">
+                <input type="checkbox" data-sponsor-toggle="${sp.id}" ${attached[sp.id]!==undefined?'checked':''}>
+                <span class="name">${escapeHtml(sp.name)}</span> <span class="lvl">${escapeHtml(sp.level||'')}</span>
+              </label>
+              ${attached[sp.id]!==undefined ? `<input placeholder="Custom wording (optional)" data-sponsor-wording="${sp.id}" value="${escapeHtml(attached[sp.id])}" style="border:1px solid var(--line-strong);border-radius:6px;padding:5px 7px;font-size:12px;width:100%;">` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="subpanel">
+        <h4>Files</h4>
+        <div id="filedrop" style="border:2px dashed var(--line-strong);border-radius:10px;padding:14px;text-align:center;font-size:12.5px;color:var(--slate);margin-bottom:10px;">
+          <input type="file" id="fileinput" style="display:none;" accept="image/*,application/pdf">
+          <button class="btn btn-sm" data-action="trigger-file-upload">Upload file</button>
+          <div style="margin-top:6px;">Images and PDFs preview inline. Kept as version history — nothing gets overwritten. Keep files under ~150KB (compress or use a thumbnail) until this is upgraded to real file storage.</div>
+        </div>
+        ${(d.files||[]).length===0 ? '<p class="small-muted">No files yet.</p>' : [...(d.files||[])].reverse().map(f=>`
+        <div class="filerow" data-open-file="${f.id}">
+          ${f.type&&f.type.startsWith('image/') ? `<img class="thumb" src="${f.data}">` : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--slate);">FILE</div>`}
+          <div style="flex:1;min-width:0;">
+            <div class="name">${escapeHtml(f.name)} <span class="small-muted">(${escapeHtml(f.version||'v1')})</span></div>
+            <div class="meta">${fmtDateTime(f.uploadDate)} · ${escapeHtml(f.uploadedBy||'—')}</div>
+            ${f.note ? `<div class="notepreview">📝 ${escapeHtml(f.note)}</div>` : ''}
+          </div>
+          <span class="small-muted" style="flex-shrink:0;">Click to open →</span>
+        </div>`).join('')}
+      </div>
+
+      <div class="subpanel">
+        <h4>Approval</h4>
+        <div class="field"><label>Decision</label>
+          <select id="approval-select">${APPROVAL_OPTS.map(o=>`<option ${o==='Awaiting review'?'selected':''}>${o}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Note (optional)</label><textarea id="approval-note" placeholder="What needs to change, or why it's approved…"></textarea></div>
+        <button class="btn btn-primary btn-sm" data-action="record-approval">Record decision</button>
+      </div>
+
+      <div class="subpanel">
+        <h4>Generate design request</h4>
+        <div class="reqbox">
+          <textarea id="requesttext">${escapeHtml(genText)}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button class="btn btn-sm" data-action="regen-request">Regenerate</button>
+          <button class="btn btn-sm btn-primary" data-action="copy-request">Copy request</button>
+          ${DB.settings.mondayBoardId ? `<button class="btn btn-sm" id="send-monday-btn" data-action="send-to-monday">Send to Monday.com</button>` : ''}
+        </div>
+        ${DB.settings.mondayBoardId
+          ? `<div class="small-muted" style="margin-top:6px;">Sends this straight to board ${escapeHtml(DB.settings.mondayBoardId)} as a new item, with this text as the first comment.</div>`
+          : `<div class="small-muted" style="margin-top:6px;">Paste this straight into Monday.com, or set a Board ID in Settings to send it directly.</div>`}
+      </div>
+
+      <div class="subpanel">
+        <h4>History</h4>
+        <div class="timeline">
+          ${[...(d.activity||[])].reverse().map(a=>`<div class="tl-item"><div class="txt">${escapeHtml(a.text)}</div><div class="when">${fmtDateTime(a.ts)}${a.by?' · '+escapeHtml(a.by):''}</div></div>`).join('') || '<p class="small-muted">No activity recorded yet.</p>'}
+        </div>
+        <div class="field" style="margin-top:12px;"><label>Add a note</label><textarea id="newnote" placeholder="Add a comment to this design's history…"></textarea></div>
+        <button class="btn btn-sm" data-action="add-note">Add note</button>
+      </div>
+
+    </div>
+  </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   DRAWER: AMENDMENT DETAIL
+   --------------------------------------------------------------------- */
+function renderAmendDrawer(){
+  const ev = DB.events[state.eventId];
+  const a = (DB.amendments[state.eventId]||[]).find(x=>x.id===state.drawerAmendId);
+  if(!ev||!a) return '';
+  const designs = DB.designs[ev.id]||[];
+  const sm = statusMeta(AMEND_STATUSES,a.status);
+  return `
+  <div class="drawer-wrap" data-close-drawer="amend">
+  <div class="drawer" data-stop>
+    <div class="drawer-head">
+      <div><div class="sub">${escapeHtml(ev.name)} · Amendment</div><h2>${escapeHtml(a.title)}</h2>
+      <div style="margin-top:4px;">${pillHtml(sm.label,sm.color)}</div></div>
+      <button class="drawer-close" data-close-drawer="amend">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="subpanel">
+        <div class="field-row">
+          <div class="field"><label>Title</label><input data-a-field="title" value="${escapeHtml(a.title)}"></div>
+          <div class="field"><label>Status</label><select data-a-field="status">${AMEND_STATUSES.map(s=>`<option value="${s.id}" ${s.id===a.status?'selected':''}>${s.label}</option>`).join('')}</select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Related design</label><select data-a-field="relatedDesignId"><option value="">—</option>${designs.map(d=>`<option value="${d.id}" ${a.relatedDesignId===d.id?'selected':''}>${escapeHtml(d.name)}</option>`).join('')}</select></div>
+          <div class="field"><label>Designer</label><select data-a-field="designer"><option value="">—</option>${DB.designers.map(x=>`<option value="${escapeHtml(x)}" ${a.designer===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Date requested</label><input type="date" data-a-field="dateRequested" value="${a.dateRequested||''}"></div>
+          <div class="field"><label>Approval status</label><select data-a-field="approval">${APPROVAL_OPTS.map(o=>`<option ${a.approval===o?'selected':''}>${o}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label>Description of amendment</label><textarea data-a-field="description">${escapeHtml(a.description||'')}</textarea></div>
+        <div class="field"><label>Notes</label><textarea data-a-field="notes">${escapeHtml(a.notes||'')}</textarea></div>
+      </div>
+      <div class="subpanel">
+        <h4>Files</h4>
+        <input type="file" id="amendfileinput" style="display:none;" accept="image/*,application/pdf">
+        <button class="btn btn-sm" data-action="trigger-amend-file-upload">Upload reference / returned file</button>
+        ${(a.files||[]).length===0?'<p class="small-muted" style="margin-top:8px;">No files yet.</p>':[...(a.files||[])].reverse().map(f=>`
+        <div class="filerow" style="margin-top:8px;">
+          ${f.type&&f.type.startsWith('image/')?`<img class="thumb" src="${f.data}">`:`<div class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">FILE</div>`}
+          <div style="flex:1;"><div class="name">${escapeHtml(f.name)}</div><div class="meta">${fmtDateTime(f.uploadDate)}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   MODALS
+   --------------------------------------------------------------------- */
+function renderModal(){
+  const m = state.modal;
+  let inner = '';
+  if(m.type==='newEvent' || m.type==='editEvent'){
+    const ev = m.type==='editEvent' ? DB.events[m.eventId] : {name:'',date:'',venue:'',printDeadline:'',notes:'',defaultDesigner:''};
+    inner = `
+    <h2>${m.type==='editEvent'?'Edit event':'New event'}</h2>
+    <div class="sub">${m.type==='editEvent'?'Update the event details.':'This will automatically load the standard design list into the event.'}</div>
+    <div class="field"><label>Event name</label><input id="f-name" value="${escapeHtml(ev.name)}" placeholder="e.g. Defence Summit 2027"></div>
+    <div class="field-row">
+      <div class="field"><label>Event date</label><input type="date" id="f-date" value="${ev.date||''}"></div>
+      <div class="field"><label>Print deadline</label><input type="date" id="f-printdeadline" value="${ev.printDeadline||''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Venue / location</label><input id="f-venue" value="${escapeHtml(ev.venue||'')}"></div>
+      <div class="field"><label>Default designer</label><select id="f-defaultdesigner"><option value="">—</option>${DB.designers.map(d=>`<option value="${escapeHtml(d)}" ${ev.defaultDesigner===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>Event notes</label><textarea id="f-notes">${escapeHtml(ev.notes||'')}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn" data-action="close-modal">Cancel</button>
+      <button class="btn btn-primary" data-action="${m.type==='editEvent'?'submit-edit-event':'submit-new-event'}">${m.type==='editEvent'?'Save changes':'Create event'}</button>
+    </div>`;
+  } else if(m.type==='confirmDelete'){
+    inner = `
+    <h2>Delete "${escapeHtml(m.label)}"?</h2>
+    <div class="sub">This permanently removes it and cannot be undone. Consider archiving instead if you might need this later.</div>
+    <div class="modal-actions">
+      <button class="btn" data-action="close-modal">Cancel</button>
+      <button class="btn btn-danger" data-action="confirm-delete">Delete permanently</button>
+    </div>`;
+  } else if(m.type==='addDesign'){
+    inner = `
+    <h2>Add design request</h2>
+    <div class="sub">Add a custom design that isn't in the standard template.</div>
+    <div class="field"><label>Design title</label><input id="f-dname" placeholder="e.g. VIP lounge banner"></div>
+    <div class="field-row">
+      <div class="field"><label>Dimensions</label><input id="f-ddim"></div>
+      <div class="field"><label>Quantity</label><input id="f-dqty"></div>
+    </div>
+    <div class="field"><label>Assigned designer</label><select id="f-ddesigner"><option value="">—</option>${DB.designers.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('')}</select></div>
+    <div class="modal-actions"><button class="btn" data-action="close-modal">Cancel</button><button class="btn btn-primary" data-action="submit-add-design">Add design</button></div>`;
+  } else if(m.type==='addAmendment'){
+    const designs = DB.designs[state.eventId]||[];
+    inner = `
+    <h2>New amendment request</h2>
+    <div class="field"><label>Title</label><input id="f-atitle" placeholder="e.g. Update sponsor logo on floorplan"></div>
+    <div class="field"><label>Related design</label><select id="f-arelated"><option value="">—</option>${designs.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}</select></div>
+    <div class="field-row">
+      <div class="field"><label>Designer</label><select id="f-adesigner"><option value="">—</option>${DB.designers.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('')}</select></div>
+      <div class="field"><label>Date requested</label><input type="date" id="f-adate" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="field"><label>Description of amendment</label><textarea id="f-adesc"></textarea></div>
+    <div class="modal-actions"><button class="btn" data-action="close-modal">Cancel</button><button class="btn btn-primary" data-action="submit-add-amendment">Create amendment</button></div>`;
+  } else if(m.type==='sponsorForm'){
+    const editing = m.sponsorId ? (DB.sponsors[state.eventId]||[]).find(s=>s.id===m.sponsorId) : null;
+    const sp = editing || {name:'',level:'',notes:''};
+    inner = `
+    <h2>${editing?'Edit sponsor':'New sponsor'}</h2>
+    <div class="field"><label>Sponsor / company name</label><input id="f-spname" value="${escapeHtml(sp.name)}"></div>
+    <div class="field"><label>Sponsor level / title</label><input id="f-splevel" value="${escapeHtml(sp.level||'')}" list="levellist"></div>
+    <datalist id="levellist">${DB.settings.sponsorLevels.map(l=>`<option value="${escapeHtml(l)}">`).join('')}</datalist>
+    <div class="field"><label>Notes</label><textarea id="f-spnotes">${escapeHtml(sp.notes||'')}</textarea></div>
+    <div class="modal-actions"><button class="btn" data-action="close-modal">Cancel</button><button class="btn btn-primary" data-action="submit-sponsor-form" data-id="${editing?editing.id:''}">${editing?'Save changes':'Add sponsor'}</button></div>`;
+  } else if(m.type==='setUser'){
+    inner = `
+    <h2>What's your name?</h2>
+    <div class="sub">Shown next to updates you make so the team knows who did what.</div>
+    <div class="field"><input id="f-username" value="${escapeHtml(currentUser)}" placeholder="e.g. Sam"></div>
+    <div class="modal-actions"><button class="btn" data-action="close-modal">Cancel</button><button class="btn btn-primary" data-action="submit-username">Save</button></div>`;
+  } else if(m.type==='filePreview'){
+    const f = m.file;
+    inner = `
+    <h2>${escapeHtml(f.name)} <span class="small-muted" style="font-weight:400;">(${escapeHtml(f.version||'v1')})</span></h2>
+    <div class="sub">Uploaded ${fmtDateTime(f.uploadDate)} by ${escapeHtml(f.uploadedBy||'—')}</div>
+    <div style="text-align:center;margin-bottom:16px;">
+    ${f.type && f.type.startsWith('image/') ? `<img src="${f.data}" style="max-width:100%;border-radius:8px;">` :
+      f.type==='application/pdf' ? `<iframe src="${f.data}" style="width:100%;height:55vh;border:1px solid var(--line);border-radius:8px;"></iframe>` :
+      `<p class="small-muted">No inline preview available for this file type.</p>`}
+    </div>
+    <div class="field">
+      <label>Notes on this file</label>
+      <textarea id="filenote" placeholder="e.g. Approved but move the logo up 5mm, or waiting on client sign-off…">${escapeHtml(f.note||'')}</textarea>
+      <div class="hint">Visible to the whole team next to this file.</div>
+    </div>
+    <div class="modal-actions"><button class="btn" data-action="close-modal">Close</button><button class="btn btn-primary" data-action="save-file-note" data-id="${f.id}">Save note</button></div>`;
+  }
+  return `<div class="overlay" data-close-modal>
+    <div class="modal ${m.type==='filePreview'?'wide':''}" data-stop>${inner}</div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   EVENT BINDING
+   --------------------------------------------------------------------- */
+function bindGlobalEvents(){
+  const app = document.getElementById('app');
+
+  // nav
+  app.querySelectorAll('[data-nav]').forEach(el=> el.onclick = ()=> setState({page:el.dataset.nav, searchQuery:''}));
+  const gs = document.getElementById('globalsearch');
+  if(gs){ gs.oninput = ()=>{ state.searchQuery = gs.value; render(); document.getElementById('globalsearch').focus(); document.getElementById('globalsearch').setSelectionRange(gs.value.length,gs.value.length); }; }
+  const userbtn = document.getElementById('userchipbtn');
+  if(userbtn) userbtn.onclick = ()=> setState({modal:{type:'setUser'}});
+
+  // dashboard
+  app.querySelectorAll('[data-open-event]').forEach(el=> el.onclick = ()=> setState({page:'event', eventId:el.dataset.openEvent, eventTab:'overview'}));
+  bindAction(app,'toggle-archived', ()=> setState({showArchived:!state.showArchived}));
+  bindAction(app,'open-new-event', ()=> setState({modal:{type:'newEvent'}}));
+
+  // event tabs
+  app.querySelectorAll('[data-etab]').forEach(el=> el.onclick = ()=> setState({eventTab:el.dataset.etab}));
+  bindAction(app,'nav-dashboard', ()=> setState({page:'dashboard'}));
+  bindAction(app,'edit-event', ()=> setState({modal:{type:'editEvent',eventId:state.eventId}}));
+  bindAction(app,'duplicate-event', duplicateEvent);
+  bindAction(app,'archive-event', async ()=>{ const ev=DB.events[state.eventId]; ev.archived=true; await saveEvent(ev); toast('Event archived'); setState({page:'dashboard'}); });
+  bindAction(app,'unarchive-event', async ()=>{ const ev=DB.events[state.eventId]; ev.archived=false; await saveEvent(ev); toast('Event restored'); render(); });
+  bindAction(app,'delete-event', ()=> setState({modal:{type:'confirmDelete', label:DB.events[state.eventId].name, onConfirm:'deleteEvent'}}));
+
+  // planner filters
+  app.querySelectorAll('[data-designfilter]').forEach(el=> el.onclick = ()=> setState({designFilter:el.dataset.designfilter}));
+  const df = document.getElementById('designerfilter'); if(df) df.onchange = ()=> setState({designerFilter:df.value});
+  app.querySelectorAll('[data-inline-status]').forEach(el=> el.onchange = ()=> updateDesignStatus(el.dataset.inlineStatus, el.value));
+  bindAction(app,'add-design', ()=> setState({modal:{type:'addDesign'}}));
+  bindAction(app,'duplicate-design', (btn)=> duplicateDesign(btn.dataset.id));
+  app.querySelectorAll('[data-open-design]').forEach(el=> el.onclick = ()=> setState({drawerDesignId:el.dataset.openDesign}));
+
+  // sponsors tab
+  bindAction(app,'add-sponsor-new', ()=> setState({modal:{type:'sponsorForm'}}));
+  bindAction(app,'edit-sponsor', (btn)=> setState({modal:{type:'sponsorForm', sponsorId:btn.dataset.id}}));
+  bindAction(app,'remove-event-sponsor', async (btn)=>{ DB.sponsors[state.eventId] = (DB.sponsors[state.eventId]||[]).filter(s=>s.id!==btn.dataset.id); await saveSponsors(state.eventId); toast('Sponsor removed from event'); render(); });
+  bindAction(app,'upload-sponsor-logo', (btn)=> triggerLogoUpload(btn.dataset.id));
+
+  // amendments
+  bindAction(app,'add-amendment', ()=> setState({modal:{type:'addAmendment'}}));
+  app.querySelectorAll('[data-open-amend]').forEach(el=> el.onclick = ()=> setState({drawerAmendId:el.dataset.openAmend}));
+
+  // template page
+  bindAction(app,'add-template-item', addTemplateItem);
+  bindAction(app,'tpl-up', (btn)=> moveTemplateItem(btn.dataset.id,-1));
+  bindAction(app,'tpl-down', (btn)=> moveTemplateItem(btn.dataset.id,1));
+  bindAction(app,'tpl-delete', (btn)=> deleteTemplateItem(btn.dataset.id));
+  app.querySelectorAll('[data-tpl-field]').forEach(el=>{
+    const ev2 = el.type==='checkbox' ? 'onchange' : 'onblur';
+    el[ev2] = ()=> updateTemplateField(el.dataset.id, el.dataset.tplField, el.type==='checkbox'?el.checked:el.value);
+  });
+
+  // timeline page
+  app.querySelectorAll('[data-open-timeline]').forEach(el=>{
+    el.onclick = ()=>{
+      const [eventId, designId] = el.dataset.openTimeline.split('::');
+      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId});
+    };
+  });
+
+  // settings
+  bindAction(app,'save-thresholds', saveThresholds);
+  bindAction(app,'save-monday-board', saveMondayBoard);
+  bindAction(app,'add-designer', addDesigner);
+  bindAction(app,'remove-designer', (btn)=> removeDesigner(btn.dataset.name));
+  bindAction(app,'add-level', addLevel);
+  bindAction(app,'remove-level', (btn)=> removeLevel(btn.dataset.name));
+
+  // search results
+  app.querySelectorAll('[data-searchresult]').forEach(el=>{
+    el.onclick = ()=>{
+      // recompute results the same way to route
+      const q = state.searchQuery.toLowerCase();
+      let results = [];
+      DB.eventOrder.forEach(id=>{
+        const ev = DB.events[id];
+        if(ev.name.toLowerCase().includes(q)) results.push({eventId:id});
+        (DB.designs[id]||[]).forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.notes||'').toLowerCase().includes(q)) results.push({eventId:id,designId:d.id}); });
+        (DB.sponsors[id]||[]).forEach(s=>{ if(s.name.toLowerCase().includes(q)) results.push({eventId:id}); });
+        (DB.amendments[id]||[]).forEach(a=>{ if(a.title.toLowerCase().includes(q)||(a.description||'').toLowerCase().includes(q)) results.push({eventId:id,amendId:a.id}); });
+      });
+      const r = results[parseInt(el.dataset.searchresult,10)];
+      if(!r) return;
+      state.searchQuery=''; state.page='event'; state.eventId=r.eventId;
+      if(r.designId){ state.eventTab='planner'; state.drawerDesignId=r.designId; }
+      else if(r.amendId){ state.eventTab='amendments'; state.drawerAmendId=r.amendId; }
+      else state.eventTab='overview';
+      render();
+    };
+  });
+
+  // modal
+  app.querySelectorAll('[data-close-modal]').forEach(el=> el.onclick = ()=> setState({modal:null}));
+  app.querySelectorAll('[data-stop]').forEach(el=> el.onclick = (e)=> e.stopPropagation());
+  bindAction(app,'close-modal', ()=> setState({modal:null}));
+  bindAction(app,'submit-new-event', submitNewEvent);
+  bindAction(app,'submit-edit-event', submitEditEvent);
+  bindAction(app,'confirm-delete', confirmDeleteRouter);
+  bindAction(app,'submit-add-design', submitAddDesign);
+  bindAction(app,'submit-add-amendment', submitAddAmendment);
+  bindAction(app,'submit-sponsor-form', submitSponsorForm);
+  bindAction(app,'submit-username', submitUsername);
+
+  // drawers
+  app.querySelectorAll('[data-close-drawer]').forEach(el=> el.onclick = ()=>{
+    if(el.dataset.closeDrawer==='design') setState({drawerDesignId:null});
+    else setState({drawerAmendId:null});
+  });
+
+  // design drawer fields
+  app.querySelectorAll('[data-d-field]').forEach(el=>{
+    el.onchange = ()=> updateDesignField(el.dataset.dField, el.value);
+  });
+  app.querySelectorAll('[data-sponsor-toggle]').forEach(el=> el.onchange = ()=> toggleDesignSponsor(el.dataset.sponsorToggle, el.checked));
+  app.querySelectorAll('[data-sponsor-wording]').forEach(el=> el.onblur = ()=> setSponsorWording(el.dataset.sponsorWording, el.value));
+  bindAction(app,'trigger-file-upload', ()=> document.getElementById('fileinput').click());
+  const fi = document.getElementById('fileinput'); if(fi) fi.onchange = (e)=> handleFileUpload(e.target.files[0]);
+  bindAction(app,'preview-file', (btn)=>{
+    const d = findDesign(state.eventId, state.drawerDesignId);
+    const f = (d.files||[]).find(x=>x.id===btn.dataset.id);
+    if(f) setState({modal:{type:'filePreview', file:f}});
+  });
+  app.querySelectorAll('[data-open-file]').forEach(el=> el.onclick = ()=>{
+    const d = findDesign(state.eventId, state.drawerDesignId);
+    const f = (d.files||[]).find(x=>x.id===el.dataset.openFile);
+    if(f) setState({modal:{type:'filePreview', file:f}});
+  });
+  bindAction(app,'save-file-note', saveFileNote);
+  bindAction(app,'record-approval', recordApproval);
+  bindAction(app,'add-note', addDesignNote);
+  bindAction(app,'copy-request', copyRequestText);
+  bindAction(app,'send-to-monday', sendToMonday);
+  bindAction(app,'regen-request', ()=>{
+    const d = findDesign(state.eventId, state.drawerDesignId);
+    d._draftRequest = generateRequestText(DB.events[state.eventId], d);
+    render();
+  });
+  const rt = document.getElementById('requesttext');
+  if(rt) rt.oninput = ()=>{ const d=findDesign(state.eventId,state.drawerDesignId); d._draftRequest = rt.value; };
+
+  // amend drawer fields
+  app.querySelectorAll('[data-a-field]').forEach(el=> el.onchange = ()=> updateAmendField(el.dataset.aField, el.value));
+  bindAction(app,'trigger-amend-file-upload', ()=> document.getElementById('amendfileinput').click());
+  const afi = document.getElementById('amendfileinput'); if(afi) afi.onchange = (e)=> handleAmendFileUpload(e.target.files[0]);
+}
+
+function bindAction(root, name, fn){
+  root.querySelectorAll(`[data-action="${name}"]`).forEach(el=> el.onclick = ()=> fn(el));
+}
+
+/* ---------------------------------------------------------------------
+   ACTION HANDLERS
+   --------------------------------------------------------------------- */
+async function logActivity(eventId, designId, text){
+  const d = findDesign(eventId, designId);
+  if(!d) return;
+  d.activity = d.activity || [];
+  d.activity.push({id:uid('act'), ts:nowIso(), text, by:currentUser});
+  await saveDesigns(eventId);
+}
+
+async function updateDesignStatus(designId, newStatus){
+  const d = findDesign(state.eventId, designId);
+  const old = statusMeta(STATUSES,d.status).label;
+  d.status = newStatus;
+  await logActivity(state.eventId, designId, `Status changed from "${old}" to "${statusMeta(STATUSES,newStatus).label}"`);
+  toast('Status updated');
+  render();
+}
+
+async function updateDesignField(field, value){
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  const old = d[field];
+  d[field] = value;
+  if(field==='status' && old!==value){
+    await logActivity(state.eventId, d.id, `Status changed from "${statusMeta(STATUSES,old).label}" to "${statusMeta(STATUSES,value).label}"`);
+  } else {
+    await saveDesigns(state.eventId);
+  }
+  toast('Saved');
+  render();
+}
+
+async function toggleDesignSponsor(sponsorId, checked){
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  d.sponsors = d.sponsors || [];
+  if(checked){ if(!d.sponsors.find(s=>s.sponsorId===sponsorId)) d.sponsors.push({sponsorId, wording:''}); }
+  else { d.sponsors = d.sponsors.filter(s=>s.sponsorId!==sponsorId); }
+  await saveDesigns(state.eventId);
+  render();
+}
+async function setSponsorWording(sponsorId, wording){
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  const s = (d.sponsors||[]).find(x=>x.sponsorId===sponsorId);
+  if(s){ s.wording = wording; await saveDesigns(state.eventId); toast('Wording saved'); }
+}
+
+function readFileAsDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleFileUpload(file){
+  if(!file) return;
+  if(file.size > 150*1024){ toast('Keep files under ~150KB for now — all files in this event share one Firestore document (1MB cap). Swap in Firebase Storage for real file sizes.', true); return; }
+  toast('Uploading…');
+  const data = await readFileAsDataUrl(file);
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  d.files = d.files || [];
+  const versionNum = d.files.length + 1;
+  d.files.push({id:uid('file'), name:file.name, type:file.type, data, uploadDate:nowIso(), uploadedBy:currentUser||'Unknown', note:'', version:'v'+versionNum});
+  await logActivity(state.eventId, d.id, `Uploaded file "${file.name}" (v${versionNum})`);
+  toast('File uploaded');
+  render();
+}
+
+async function saveFileNote(btn){
+  const fileId = btn.dataset.id;
+  const note = document.getElementById('filenote').value.trim();
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  const f = (d.files||[]).find(x=>x.id===fileId);
+  if(!f) return;
+  const hadNote = !!f.note;
+  f.note = note;
+  await saveDesigns(state.eventId);
+  await logActivity(state.eventId, d.id, `${hadNote?'Updated':'Added'} note on file "${f.name}"${note?': '+note:''}`);
+  toast('Note saved');
+  setState({modal:null});
+}
+
+async function recordApproval(){
+  const decision = document.getElementById('approval-select').value;
+  const note = document.getElementById('approval-note').value.trim();
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  await logActivity(state.eventId, d.id, `Approval decision: ${decision}${note?' — '+note:''}`);
+  const map = {'Approved':'approved','Amendments required':'amendments_required','Re-requested':'re_requested'};
+  if(map[decision]){ d.status = map[decision]; await saveDesigns(state.eventId); }
+  toast('Decision recorded');
+  render();
+}
+
+async function addDesignNote(){
+  const note = document.getElementById('newnote').value.trim();
+  if(!note) return;
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  await logActivity(state.eventId, d.id, `Note: ${note}`);
+  toast('Note added');
+  render();
+}
+
+function copyRequestText(){
+  const txt = document.getElementById('requesttext').value;
+  navigator.clipboard.writeText(txt).then(async ()=>{
+    toast('Request copied — paste it into Monday.com');
+    const d = findDesign(state.eventId, state.drawerDesignId);
+    if(d){
+      const wasUnrequested = ['not_started','ready'].includes(d.status);
+      d.requestedBy = currentUser || d.requestedBy || 'Unknown';
+      d.requestedDate = nowIso();
+      if(wasUnrequested) d.status = 'requested';
+      await logActivity(state.eventId, d.id, `Request copied for Monday.com${wasUnrequested?' — status set to Requested':''}`);
+      await saveDesigns(state.eventId);
+      render();
+    }
+  }).catch(()=> toast('Copy failed — select and copy manually', true));
+}
+
+async function sendToMonday(btn){
+  const ev = DB.events[state.eventId];
+  const d = findDesign(state.eventId, state.drawerDesignId);
+  const boardId = DB.settings.mondayBoardId;
+  if(!boardId){ toast('Set a Monday.com Board ID in Settings first', true); return; }
+  const txt = document.getElementById('requesttext').value;
+  const itemName = `${ev.name} — ${d.name}`;
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try{
+    const res = await fetch('/.netlify/functions/monday-create-item', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ boardId, itemName, updateText: txt })
+    });
+    const data = await res.json();
+    if(!res.ok || data.error){
+      toast('Monday.com error: ' + (typeof data.error==='string' ? data.error : (data.error && data.error.message) || 'request failed'), true);
+      return;
+    }
+    const wasUnrequested = ['not_started','ready'].includes(d.status);
+    d.requestedBy = currentUser || d.requestedBy || 'Unknown';
+    d.requestedDate = nowIso();
+    d.mondayItemId = data.itemId;
+    if(wasUnrequested) d.status = 'requested';
+    await logActivity(state.eventId, d.id, `Sent directly to Monday.com (item ${data.itemId})${wasUnrequested?' — status set to Requested':''}`);
+    await saveDesigns(state.eventId);
+    toast('Created in Monday.com');
+    render();
+  } catch(e){
+    toast('Could not reach the Monday.com function — is this deployed on Netlify with MONDAY_API_TOKEN set?', true);
+  } finally {
+    if(document.body.contains(btn)){ btn.disabled=false; btn.textContent=originalLabel; }
+  }
+}
+
+/* --- events --- */
+async function submitNewEvent(){
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){ toast('Give the event a name first', true); return; }
+  const id = uid('ev');
+  const ev = {
+    id, name,
+    date: document.getElementById('f-date').value,
+    printDeadline: document.getElementById('f-printdeadline').value,
+    venue: document.getElementById('f-venue').value.trim(),
+    defaultDesigner: document.getElementById('f-defaultdesigner').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    archived:false, createdAt: nowIso(),
+  };
+  DB.designs[id] = DB.template.map(t=>({
+    id: uid('d'), name:t.name, status:'not_started', designer: t.designer||ev.defaultDesigner||'',
+    dimensions:t.dimensions||'', quantity:'', deadline:'', notes:t.instructions||'', sponsors:[], files:[],
+    requestedBy:'', requestedDate:'',
+    activity:[{id:uid('act'),ts:nowIso(),text:'Design added from template',by:currentUser}], custom:false
+  }));
+  DB.sponsors[id] = [];
+  DB.amendments[id] = [];
+  DB.eventOrder.unshift(id);
+  await saveEvent(ev);
+  await saveEventIndex();
+  await saveDesigns(id); await saveSponsors(id); await saveAmendments(id);
+  toast('Event created');
+  setState({modal:null, page:'event', eventId:id, eventTab:'overview'});
+}
+
+async function submitEditEvent(){
+  const ev = DB.events[state.modal.eventId];
+  ev.name = document.getElementById('f-name').value.trim() || ev.name;
+  ev.date = document.getElementById('f-date').value;
+  ev.printDeadline = document.getElementById('f-printdeadline').value;
+  ev.venue = document.getElementById('f-venue').value.trim();
+  ev.defaultDesigner = document.getElementById('f-defaultdesigner').value;
+  ev.notes = document.getElementById('f-notes').value.trim();
+  await saveEvent(ev);
+  toast('Event updated');
+  setState({modal:null});
+}
+
+async function duplicateEvent(){
+  const src = DB.events[state.eventId];
+  const id = uid('ev');
+  const ev = {...src, id, name: src.name+' (copy)', createdAt: nowIso(), archived:false};
+  DB.designs[id] = (DB.designs[state.eventId]||[]).map(d=>({...d, id:uid('d'), files:[], requestedBy:'', requestedDate:'', activity:[{id:uid('act'),ts:nowIso(),text:'Duplicated from '+src.name,by:currentUser}]}));
+  DB.sponsors[id] = JSON.parse(JSON.stringify(DB.sponsors[state.eventId]||[]));
+  DB.amendments[id] = [];
+  DB.eventOrder.unshift(id);
+  await saveEvent(ev); await saveEventIndex(); await saveDesigns(id); await saveSponsors(id); await saveAmendments(id);
+  toast('Event duplicated — update the dates and sponsors as needed');
+  setState({eventId:id, eventTab:'overview'});
+}
+
+function confirmDeleteRouter(){
+  // currently only used for events
+  deleteEvent();
+}
+async function deleteEvent(){
+  const id = state.eventId;
+  delete DB.events[id]; delete DB.designs[id]; delete DB.sponsors[id]; delete DB.amendments[id];
+  DB.eventOrder = DB.eventOrder.filter(x=>x!==id);
+  await saveEventIndex();
+  toast('Event deleted');
+  setState({modal:null, page:'dashboard'});
+}
+
+/* --- designs --- */
+async function submitAddDesign(){
+  const name = document.getElementById('f-dname').value.trim();
+  if(!name){ toast('Give the design a name', true); return; }
+  const d = {id:uid('d'), name, status:'not_started', designer:document.getElementById('f-ddesigner').value,
+    dimensions:document.getElementById('f-ddim').value, quantity:document.getElementById('f-dqty').value,
+    deadline:'', notes:'', sponsors:[], files:[], custom:true, requestedBy:'', requestedDate:'',
+    activity:[{id:uid('act'),ts:nowIso(),text:'Custom design added',by:currentUser}]};
+  DB.designs[state.eventId] = DB.designs[state.eventId]||[];
+  DB.designs[state.eventId].push(d);
+  await saveDesigns(state.eventId);
+  toast('Design added');
+  setState({modal:null});
+}
+
+async function duplicateDesign(id){
+  const list = DB.designs[state.eventId];
+  const d = list.find(x=>x.id===id);
+  const copy = {...d, id:uid('d'), name:d.name+' (copy)', files:[], requestedBy:'', requestedDate:'', activity:[{id:uid('act'),ts:nowIso(),text:'Duplicated design',by:currentUser}]};
+  list.push(copy);
+  await saveDesigns(state.eventId);
+  toast('Design duplicated');
+  render();
+}
+
+/* --- amendments --- */
+async function submitAddAmendment(){
+  const title = document.getElementById('f-atitle').value.trim();
+  if(!title){ toast('Give the amendment a title', true); return; }
+  const a = {id:uid('am'), title, relatedDesignId:document.getElementById('f-arelated').value,
+    designer:document.getElementById('f-adesigner').value, dateRequested:document.getElementById('f-adate').value,
+    description:document.getElementById('f-adesc').value, status:'requested', notes:'', files:[], approval:'Awaiting review'};
+  DB.amendments[state.eventId] = DB.amendments[state.eventId]||[];
+  DB.amendments[state.eventId].push(a);
+  await saveAmendments(state.eventId);
+  toast('Amendment logged');
+  setState({modal:null});
+}
+async function updateAmendField(field,value){
+  const a = (DB.amendments[state.eventId]||[]).find(x=>x.id===state.drawerAmendId);
+  a[field]=value;
+  await saveAmendments(state.eventId);
+  toast('Saved');
+  render();
+}
+async function handleAmendFileUpload(file){
+  if(!file) return;
+  if(file.size > 150*1024){ toast('Keep files under ~150KB for now — see Settings for why.', true); return; }
+  const data = await readFileAsDataUrl(file);
+  const a = (DB.amendments[state.eventId]||[]).find(x=>x.id===state.drawerAmendId);
+  a.files = a.files||[];
+  a.files.push({id:uid('file'), name:file.name, type:file.type, data, uploadDate:nowIso()});
+  await saveAmendments(state.eventId);
+  toast('File uploaded');
+  render();
+}
+
+/* --- sponsors (event-level) --- */
+async function submitSponsorForm(btn){
+  const id = btn.dataset.id;
+  const name = document.getElementById('f-spname').value.trim();
+  if(!name){ toast('Sponsor needs a name', true); return; }
+  DB.sponsors[state.eventId] = DB.sponsors[state.eventId]||[];
+  if(id){
+    const sp = DB.sponsors[state.eventId].find(s=>s.id===id);
+    sp.name=name; sp.level=document.getElementById('f-splevel').value; sp.notes=document.getElementById('f-spnotes').value;
+  } else {
+    DB.sponsors[state.eventId].push({id:uid('sp'), name, level:document.getElementById('f-splevel').value, notes:document.getElementById('f-spnotes').value, logo:''});
+  }
+  await saveSponsors(state.eventId);
+  toast(id?'Sponsor updated':'Sponsor added');
+  setState({modal:null});
+}
+function triggerLogoUpload(sponsorId){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = async ()=>{
+    const file = input.files[0]; if(!file) return;
+    if(file.size > 80*1024){ toast('Keep logos under ~80KB — all sponsors in this event share one Firestore document.', true); return; }
+    const data = await readFileAsDataUrl(file);
+    const sp = (DB.sponsors[state.eventId]||[]).find(s=>s.id===sponsorId);
+    sp.logo = data;
+    await saveSponsors(state.eventId);
+    toast('Logo uploaded');
+    render();
+  };
+  input.click();
+}
+
+/* --- template --- */
+async function addTemplateItem(){
+  DB.template.push({id:uid('tpl'), name:'New design type', order:DB.template.length, dimensions:'', designer:'', instructions:'', sponsorsCommon:false});
+  await saveTemplate();
+  toast('Design type added');
+  render();
+}
+async function updateTemplateField(id, field, value){
+  const t = DB.template.find(x=>x.id===id);
+  t[field]=value;
+  await saveTemplate();
+  toast('Template saved');
+}
+async function moveTemplateItem(id, dir){
+  const items = [...DB.template].sort((a,b)=>a.order-b.order);
+  const idx = items.findIndex(x=>x.id===id);
+  const swapIdx = idx+dir;
+  if(swapIdx<0||swapIdx>=items.length) return;
+  const a=items[idx], b=items[swapIdx];
+  const tmp=a.order; a.order=b.order; b.order=tmp;
+  await saveTemplate();
+  render();
+}
+async function deleteTemplateItem(id){
+  DB.template = DB.template.filter(x=>x.id!==id);
+  await saveTemplate();
+  toast('Removed from template');
+  render();
+}
+
+/* --- settings --- */
+async function saveThresholds(){
+  DB.settings.thresholds = {
+    onTrack: parseInt(document.getElementById('th-ontrack').value,10)||6,
+    keepMoving: parseInt(document.getElementById('th-keepmoving').value,10)||4,
+    attention: parseInt(document.getElementById('th-attention').value,10)||2,
+  };
+  await saveSettings();
+  toast('Thresholds saved');
+  render();
+}
+async function saveMondayBoard(){
+  DB.settings.mondayBoardId = document.getElementById('th-mondayboard').value.trim();
+  await saveSettings();
+  toast('Monday.com board ID saved');
+  render();
+}
+async function addDesigner(){
+  const v = document.getElementById('new-designer').value.trim();
+  if(!v) return;
+  if(!DB.designers.includes(v)) DB.designers.push(v);
+  await saveDesigners();
+  toast('Designer added');
+  render();
+}
+async function removeDesigner(name){
+  DB.designers = DB.designers.filter(d=>d!==name);
+  await saveDesigners();
+  render();
+}
+async function addLevel(){
+  const v = document.getElementById('new-level').value.trim();
+  if(!v) return;
+  if(!DB.settings.sponsorLevels.includes(v)) DB.settings.sponsorLevels.push(v);
+  await saveSettings();
+  toast('Level added');
+  render();
+}
+async function removeLevel(name){
+  DB.settings.sponsorLevels = DB.settings.sponsorLevels.filter(l=>l!==name);
+  await saveSettings();
+  render();
+}
+async function submitUsername(){
+  const v = document.getElementById('f-username').value.trim();
+  currentUser = v;
+  localStorage.setItem('designPlannerUser', v);
+  toast('Name saved');
+  setState({modal:null});
+}
+
+/* ---------------------------------------------------------------------
+   INIT
+   --------------------------------------------------------------------- */
+(async function init(){
+  await loadAll();
+  render();
+  if(!currentUser){
+    setTimeout(()=> setState({modal:{type:'setUser'}}), 400);
+  }
+})();
+</script>
+</body>
+</html>
