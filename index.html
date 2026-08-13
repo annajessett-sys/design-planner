@@ -925,8 +925,11 @@ function renderDesignDrawer(){
     <div class="drawer-body">
 
       <div class="subpanel">
-        <h4>Design information</h4>
-        <div class="field-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h4 style="margin:0;">Design information</h4>
+          <button class="btn btn-sm btn-danger" data-action="delete-design">Delete design</button>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
           <div class="field"><label>Design title</label><input data-d-field="name" value="${escapeHtml(d.name)}"></div>
           <div class="field"><label>Status</label>
             <select data-d-field="status">${STATUSES.map(s=>`<option value="${s.id}" ${s.id===d.status?'selected':''}>${s.label}</option>`).join('')}</select>
@@ -1199,6 +1202,10 @@ function bindGlobalEvents(){
   app.querySelectorAll('[data-inline-status]').forEach(el=> el.onchange = ()=> updateDesignStatus(el.dataset.inlineStatus, el.value));
   bindAction(app,'add-design', ()=> setState({modal:{type:'addDesign'}}));
   bindAction(app,'duplicate-design', (btn)=> duplicateDesign(btn.dataset.id));
+  bindAction(app,'delete-design', ()=>{
+    const d = findDesign(state.eventId, state.drawerDesignId);
+    setState({modal:{type:'confirmDelete', label: d ? d.name : 'this design', onConfirm:'deleteDesign'}});
+  });
   app.querySelectorAll('[data-open-design]').forEach(el=> el.onclick = ()=> setState({drawerDesignId:el.dataset.openDesign}));
 
   // sponsors tab
@@ -1534,8 +1541,9 @@ async function duplicateEvent(){
 }
 
 function confirmDeleteRouter(){
-  // currently only used for events
-  deleteEvent();
+  const action = state.modal && state.modal.onConfirm;
+  if(action === 'deleteDesign') deleteDesignConfirmed();
+  else deleteEvent();
 }
 async function deleteEvent(){
   const id = state.eventId;
@@ -1544,6 +1552,14 @@ async function deleteEvent(){
   await saveEventIndex();
   toast('Event deleted');
   setState({modal:null, page:'dashboard'});
+}
+async function deleteDesignConfirmed(){
+  const designId = state.drawerDesignId;
+  const d = findDesign(state.eventId, designId);
+  DB.designs[state.eventId] = (DB.designs[state.eventId]||[]).filter(x=>x.id!==designId);
+  await saveDesigns(state.eventId);
+  toast(`"${d ? d.name : 'Design'}" deleted`);
+  setState({modal:null, drawerDesignId:null});
 }
 
 /* --- designs --- */
