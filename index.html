@@ -369,7 +369,7 @@ async function saveSettings(){ await sset('settings', JSON.stringify(DB.settings
    STATE
    --------------------------------------------------------------------- */
 const state = {
-  page:'dashboard',        // dashboard | event | template | timeline | settings
+  page:'dashboard',        // dashboard | event | template | timeline | settings | alldesigns
   eventId:null,
   eventTab:'overview',     // overview | planner | sponsors | amendments | activity
   showArchived:false,
@@ -379,6 +379,9 @@ const state = {
   drawerAmendId:null,
   searchQuery:'',
   modal:null,               // {type:'newEvent'|'confirmDelete'|...}
+  selectedDesignIds:[],      // bulk-delete selections in the current event's planner
+  allDesignsEventFilter:'all',
+  allDesignsStatusFilter:'all',
 };
 
 function setState(patch){ Object.assign(state, patch); render(); }
@@ -430,7 +433,7 @@ function render(){
 
 function renderTopbar(){
   const navItems = [
-    ['dashboard','Dashboard'],['timeline','Requests Timeline'],['template','Design Template'],['settings','Settings']
+    ['dashboard','Dashboard'],['alldesigns','All Designs'],['timeline','Requests Timeline'],['template','Design Template'],['settings','Settings']
   ];
   return `
   <div class="topbar">
@@ -454,6 +457,7 @@ function renderPage(){
     case 'template': return renderTemplatePage();
     case 'timeline': return renderTimelinePage();
     case 'settings': return renderSettingsPage();
+    case 'alldesigns': return renderAllDesignsPage();
     default: return renderDashboard();
   }
 }
@@ -604,6 +608,10 @@ function renderEventPlanner(ev){
   else if(state.designFilter!=='all') designs = designs.filter(d=>d.status===state.designFilter);
   if(state.designerFilter!=='all') designs = designs.filter(d=>d.designer===state.designerFilter);
 
+  const selectedCount = state.selectedDesignIds.length;
+  const visibleIds = designs.map(d=>d.id);
+  const allVisibleSelected = visibleIds.length>0 && visibleIds.every(id=>state.selectedDesignIds.includes(id));
+
   return `
   <div class="filterbar">
     ${filters.map(f=>`<button class="chip ${state.designFilter===f?'active':''}" data-designfilter="${f}">${filterLabels[f]}</button>`).join('')}
@@ -612,18 +620,21 @@ function renderEventPlanner(ev){
       ${DB.designers.map(d=>`<option value="${escapeHtml(d)}" ${state.designerFilter===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}
     </select>
     <div style="flex:1;"></div>
+    ${selectedCount>0 ? `<button class="btn btn-sm btn-danger" data-action="bulk-delete-designs">Delete ${selectedCount} selected</button>` : ''}
     <button class="btn btn-sm btn-primary" data-action="add-design">+ Add design</button>
   </div>
   ${designs.length===0 ? renderEmpty('🎨','No designs match','Try a different filter, or add a custom design request for this event.',['add-design','+ Add design']) : `
   <div class="card" style="padding:0;overflow-x:auto;">
   <table>
-    <thead><tr><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Sponsors</th><th>Deadline</th><th></th></tr></thead>
+    <thead><tr><th style="width:32px;"><input type="checkbox" id="selectall-designs" ${allVisibleSelected?'checked':''}></th><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Sponsors</th><th>Deadline</th><th></th></tr></thead>
     <tbody>
     ${designs.map(d=>{
       const sm = statusMeta(STATUSES,d.status);
       const sponsorNames = (d.sponsors||[]).map(s=>{const sp=(DB.sponsors[ev.id]||[]).find(x=>x.id===s.sponsorId); return sp?sp.name:null;}).filter(Boolean);
       const isNa = d.status==='na';
+      const checked = state.selectedDesignIds.includes(d.id);
       return `<tr class="rowlink${isNa?' row-na':''}" data-open-design="${d.id}">
+        <td onclick="event.stopPropagation()"><input type="checkbox" data-design-checkbox="${d.id}" ${checked?'checked':''}></td>
         <td><b>${escapeHtml(d.name)}</b>${d.custom?'<span class="small-muted"> · custom</span>':''}</td>
         <td onclick="event.stopPropagation()">
           <select class="statusselect" data-inline-status="${d.id}" style="background:var(--${sm.color}-tint,var(--slate-tint));color:var(--${sm.color},var(--slate));border-color:var(--${sm.color},var(--line-strong));">
@@ -748,10 +759,62 @@ function renderTemplatePage(){
 }
 
 /* ---------------------------------------------------------------------
+   ALL DESIGNS PAGE — every design, from every event, side by side.
+   --------------------------------------------------------------------- */
+function renderAllDesignsPage(){
+  const filterEvent = state.allDesignsEventFilter;
+  const filterStatus = state.allDesignsStatusFilter;
+  let rows = [];
+  DB.eventOrder.forEach(id=>{
+    const ev = DB.events[id];
+    if(!ev) return;
+    (DB.designs[id]||[]).forEach(d=> rows.push({ev,d}));
+  });
+  if(filterEvent!=='all') rows = rows.filter(r=>r.ev.id===filterEvent);
+  if(filterStatus!=='all') rows = rows.filter(r=>r.d.status===filterStatus);
+
+  return `
+  <div class="pagehead">
+    <div><h1>All Designs</h1><div class="sub">Every design across every event, side by side — ${rows.length} shown.</div></div>
+  </div>
+  <div class="filterbar">
+    <select id="alldesigns-event-filter">
+      <option value="all">All events</option>
+      ${DB.eventOrder.map(id=>`<option value="${id}" ${filterEvent===id?'selected':''}>${escapeHtml(DB.events[id].name)}</option>`).join('')}
+    </select>
+    <select id="alldesigns-status-filter">
+      <option value="all">All statuses</option>
+      ${STATUSES.map(s=>`<option value="${s.id}" ${filterStatus===s.id?'selected':''}>${s.label}</option>`).join('')}
+    </select>
+  </div>
+  ${rows.length===0 ? renderEmpty('🗂️','Nothing to show','No designs match this filter.',null) : `
+  <div class="card" style="padding:0;overflow-x:auto;">
+  <table>
+    <thead><tr><th>Event</th><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Deadline</th></tr></thead>
+    <tbody>
+    ${rows.map(({ev,d})=>{
+      const sm = statusMeta(STATUSES,d.status);
+      return `<tr class="rowlink" data-open-alldesign="${ev.id}::${d.id}">
+        <td>${escapeHtml(ev.name)}</td>
+        <td><b>${escapeHtml(d.name)}</b>${d.custom?'<span class="small-muted"> · custom</span>':''}</td>
+        <td>${pillHtml(sm.label,sm.color)}</td>
+        <td>${escapeHtml(d.designer||'—')}</td>
+        <td>${escapeHtml(d.requestedBy||'—')}</td>
+        <td>${d.requestedDate? fmtDateTime(d.requestedDate) : '<span class="small-muted">—</span>'}</td>
+        <td>${d.deadline? fmtDate(d.deadline) : '<span class="small-muted">—</span>'}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`}
+  `;
+}
+
+/* ---------------------------------------------------------------------
    REQUESTS TIMELINE PAGE — every requested design, across every active
    event, sorted by deadline. Drops off once approved or complete.
    --------------------------------------------------------------------- */
-function renderTimelinePage(){
+function getTimelineRows(){
   const activeStatuses = ['requested','in_progress','awaiting_approval','amendments_required','re_requested'];
   let rows = [];
   DB.eventOrder.forEach(id=>{
@@ -769,9 +832,15 @@ function renderTimelinePage(){
     if(b.effectiveDeadline) return 1;
     return 0;
   });
+  return rows;
+}
+
+function renderTimelinePage(){
+  const rows = getTimelineRows();
   return `
   <div class="pagehead">
     <div><h1>Requests Timeline</h1><div class="sub">Every design that's been requested, across all active events, ordered by deadline. Drops off this list once it's approved or complete.</div></div>
+    ${rows.length>0 ? `<button class="btn btn-sm" data-action="export-timeline-csv">⬇ Export CSV</button>` : ''}
   </div>
   ${rows.length===0 ? renderEmpty('📋','Nothing outstanding','Once a design is marked "Requested" or later, it will show up here until it is approved.',null) : `
   <div class="card" style="padding:0;overflow-x:auto;">
@@ -1108,6 +1177,15 @@ function renderModal(){
       <button class="btn" data-action="close-modal">Cancel</button>
       <button class="btn btn-danger" data-action="confirm-delete">Delete permanently</button>
     </div>`;
+  } else if(m.type==='confirmBulkDeleteDesigns'){
+    const n = state.selectedDesignIds.length;
+    inner = `
+    <h2>Delete ${n} design${n===1?'':'s'}?</h2>
+    <div class="sub">This permanently removes ${n===1?'it':'them'} — files, history, everything. Cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn" data-action="close-modal">Cancel</button>
+      <button class="btn btn-danger" data-action="confirm-bulk-delete-designs">Delete permanently</button>
+    </div>`;
   } else if(m.type==='addDesign'){
     inner = `
     <h2>Add design request</h2>
@@ -1176,20 +1254,20 @@ function bindGlobalEvents(){
   const app = document.getElementById('app');
 
   // nav
-  app.querySelectorAll('[data-nav]').forEach(el=> el.onclick = ()=> setState({page:el.dataset.nav, searchQuery:''}));
+  app.querySelectorAll('[data-nav]').forEach(el=> el.onclick = ()=> setState({page:el.dataset.nav, searchQuery:'', selectedDesignIds:[]}));
   const gs = document.getElementById('globalsearch');
   if(gs){ gs.oninput = ()=>{ state.searchQuery = gs.value; render(); document.getElementById('globalsearch').focus(); document.getElementById('globalsearch').setSelectionRange(gs.value.length,gs.value.length); }; }
   const userbtn = document.getElementById('userchipbtn');
   if(userbtn) userbtn.onclick = ()=> setState({modal:{type:'setUser'}});
 
   // dashboard
-  app.querySelectorAll('[data-open-event]').forEach(el=> el.onclick = ()=> setState({page:'event', eventId:el.dataset.openEvent, eventTab:'overview'}));
+  app.querySelectorAll('[data-open-event]').forEach(el=> el.onclick = ()=> setState({page:'event', eventId:el.dataset.openEvent, eventTab:'overview', selectedDesignIds:[]}));
   bindAction(app,'toggle-archived', ()=> setState({showArchived:!state.showArchived}));
   bindAction(app,'open-new-event', ()=> setState({modal:{type:'newEvent'}}));
 
   // event tabs
-  app.querySelectorAll('[data-etab]').forEach(el=> el.onclick = ()=> setState({eventTab:el.dataset.etab}));
-  bindAction(app,'nav-dashboard', ()=> setState({page:'dashboard'}));
+  app.querySelectorAll('[data-etab]').forEach(el=> el.onclick = ()=> setState({eventTab:el.dataset.etab, selectedDesignIds:[]}));
+  bindAction(app,'nav-dashboard', ()=> setState({page:'dashboard', selectedDesignIds:[]}));
   bindAction(app,'edit-event', ()=> setState({modal:{type:'editEvent',eventId:state.eventId}}));
   bindAction(app,'duplicate-event', duplicateEvent);
   bindAction(app,'archive-event', async ()=>{ const ev=DB.events[state.eventId]; ev.archived=true; await saveEvent(ev); toast('Event archived'); setState({page:'dashboard'}); });
@@ -1207,6 +1285,18 @@ function bindGlobalEvents(){
     setState({modal:{type:'confirmDelete', label: d ? d.name : 'this design', onConfirm:'deleteDesign'}});
   });
   app.querySelectorAll('[data-open-design]').forEach(el=> el.onclick = ()=> setState({drawerDesignId:el.dataset.openDesign}));
+
+  // bulk select / delete
+  app.querySelectorAll('[data-design-checkbox]').forEach(el=> el.onchange = ()=> toggleDesignSelection(el.dataset.designCheckbox, el.checked));
+  const selectAllEl = document.getElementById('selectall-designs');
+  if(selectAllEl){
+    selectAllEl.onchange = ()=>{
+      const visibleIds = [...app.querySelectorAll('[data-design-checkbox]')].map(x=>x.dataset.designCheckbox);
+      toggleSelectAllDesigns(selectAllEl.checked, visibleIds);
+    };
+  }
+  bindAction(app,'bulk-delete-designs', ()=> setState({modal:{type:'confirmBulkDeleteDesigns'}}));
+  bindAction(app,'confirm-bulk-delete-designs', bulkDeleteDesignsConfirmed);
 
   // sponsors tab
   bindAction(app,'add-sponsor-new', ()=> setState({modal:{type:'sponsorForm'}}));
@@ -1228,13 +1318,24 @@ function bindGlobalEvents(){
     el[ev2] = ()=> updateTemplateField(el.dataset.id, el.dataset.tplField, el.type==='checkbox'?el.checked:el.value);
   });
 
+  // all designs page
+  const adef = document.getElementById('alldesigns-event-filter'); if(adef) adef.onchange = ()=> setState({allDesignsEventFilter:adef.value});
+  const adsf = document.getElementById('alldesigns-status-filter'); if(adsf) adsf.onchange = ()=> setState({allDesignsStatusFilter:adsf.value});
+  app.querySelectorAll('[data-open-alldesign]').forEach(el=>{
+    el.onclick = ()=>{
+      const [eventId, designId] = el.dataset.openAlldesign.split('::');
+      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId, selectedDesignIds:[]});
+    };
+  });
+
   // timeline page
   app.querySelectorAll('[data-open-timeline]').forEach(el=>{
     el.onclick = ()=>{
       const [eventId, designId] = el.dataset.openTimeline.split('::');
-      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId});
+      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId, selectedDesignIds:[]});
     };
   });
+  bindAction(app,'export-timeline-csv', exportTimelineCSV);
 
   // settings
   bindAction(app,'save-thresholds', saveThresholds);
@@ -1562,6 +1663,33 @@ async function deleteDesignConfirmed(){
   setState({modal:null, drawerDesignId:null});
 }
 
+/* --- bulk design selection / delete --- */
+function toggleDesignSelection(id, checked){
+  const set = new Set(state.selectedDesignIds);
+  if(checked) set.add(id); else set.delete(id);
+  state.selectedDesignIds = [...set];
+  render();
+}
+function toggleSelectAllDesigns(checked, visibleIds){
+  if(checked){
+    const set = new Set(state.selectedDesignIds);
+    visibleIds.forEach(id=>set.add(id));
+    state.selectedDesignIds = [...set];
+  } else {
+    const remove = new Set(visibleIds);
+    state.selectedDesignIds = state.selectedDesignIds.filter(id=>!remove.has(id));
+  }
+  render();
+}
+async function bulkDeleteDesignsConfirmed(){
+  const ids = new Set(state.selectedDesignIds);
+  const n = ids.size;
+  DB.designs[state.eventId] = (DB.designs[state.eventId]||[]).filter(d=>!ids.has(d.id));
+  await saveDesigns(state.eventId);
+  toast(`${n} design${n===1?'':'s'} deleted`);
+  setState({modal:null, selectedDesignIds:[]});
+}
+
 /* --- designs --- */
 async function submitAddDesign(){
   const name = document.getElementById('f-dname').value.trim();
@@ -1730,6 +1858,43 @@ async function submitUsername(){
   localStorage.setItem('designPlannerUser', v);
   toast('Name saved');
   setState({modal:null});
+}
+
+/* ---------------------------------------------------------------------
+   CSV EXPORT (Requests Timeline)
+   --------------------------------------------------------------------- */
+function csvEscape(v){
+  v = (v===null||v===undefined) ? '' : String(v);
+  if(/[",\n]/.test(v)){ v = '"'+v.replace(/"/g,'""')+'"'; }
+  return v;
+}
+function exportTimelineCSV(){
+  const rows = getTimelineRows();
+  const header = ['Deadline','Event','Design','Status','Designer','Requested by','Requested on'];
+  const lines = [header.join(',')];
+  rows.forEach(({ev,d,effectiveDeadline})=>{
+    const sm = statusMeta(STATUSES,d.status);
+    lines.push([
+      effectiveDeadline ? fmtDate(effectiveDeadline) : '',
+      ev.name,
+      d.name,
+      sm.label,
+      d.designer||'',
+      d.requestedBy||'',
+      d.requestedDate ? fmtDateTime(d.requestedDate) : ''
+    ].map(csvEscape).join(','));
+  });
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'requests-timeline-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exported');
 }
 
 /* ---------------------------------------------------------------------
