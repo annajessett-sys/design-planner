@@ -193,6 +193,52 @@ tr.row-na .pill{filter:grayscale(1);opacity:.7;}
 .small-muted{color:var(--slate);font-size:12px;}
 label.checkline{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;margin-bottom:6px;}
 .loading-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:10px;color:var(--slate);font-size:13.5px;}
+
+/* ---------- View switch ---------- */
+.viewswitch{display:inline-flex;background:var(--slate-tint);border-radius:9px;padding:3px;gap:2px;}
+.viewswitch button{background:transparent;border:none;border-radius:7px;padding:6px 12px;font-size:12.5px;font-weight:700;color:var(--slate);}
+.viewswitch button.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(27,36,48,0.12);}
+
+/* ---------- Master grid (matrix) ---------- */
+.gridwrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:74vh;}
+table.matrix{border-collapse:separate;border-spacing:0;width:auto;min-width:100%;font-size:12.5px;}
+table.matrix th,table.matrix td{border:none;border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:6px 8px;}
+table.matrix thead th{position:sticky;top:0;background:#fff;z-index:3;vertical-align:bottom;padding:10px 8px;border-bottom:2px solid var(--line-strong);}
+table.matrix .rowhead{position:sticky;left:0;background:#fff;z-index:2;min-width:210px;max-width:260px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;font-size:12.5px;box-shadow:1px 0 0 var(--line-strong);}
+table.matrix thead .rowhead{z-index:5;}
+table.matrix tbody tr:hover .rowhead{background:var(--slate-tint);}
+table.matrix td.cell{min-width:132px;text-align:center;padding:5px 6px;}
+table.matrix .colname{font-family:'Sora',sans-serif;font-weight:700;font-size:12.5px;color:var(--ink);white-space:nowrap;}
+table.matrix .colmeta{font-size:10.5px;font-weight:600;text-transform:none;letter-spacing:0;margin-top:2px;}
+.cellsel{width:100%;border:1px solid transparent;border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;text-align:center;appearance:none;-webkit-appearance:none;cursor:pointer;text-align-last:center;}
+.cellsel:hover{border-color:var(--line-strong);}
+.cellblank{width:100%;border:1px dashed var(--line);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--line-strong);background:transparent;}
+.cellblank:hover{border-color:var(--teal);color:var(--teal);}
+.cellopen{border:none;background:transparent;color:var(--slate);font-size:11px;padding:2px 4px;border-radius:5px;}
+.cellopen:hover{background:var(--slate-tint);color:var(--ink);}
+.gridkey{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--slate);align-items:center;}
+
+/* ---------- Merch ---------- */
+.merchwrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;}
+table.merch{border-collapse:separate;border-spacing:0;width:auto;min-width:100%;font-size:12.5px;}
+table.merch th,table.merch td{border:none;border-bottom:1px solid var(--line);padding:6px 8px;white-space:nowrap;}
+table.merch thead th{position:sticky;top:0;background:#fff;z-index:3;border-bottom:2px solid var(--line-strong);}
+table.merch .stickcol{position:sticky;left:0;background:#fff;z-index:2;box-shadow:1px 0 0 var(--line);min-width:150px;}
+table.merch thead .stickcol{z-index:4;}
+table.merch tbody tr:hover td{background:#FCFBF8;}
+table.merch tbody tr:hover .stickcol{background:#FCFBF8;}
+table.merch input,table.merch select{border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12px;background:transparent;width:100%;min-width:70px;}
+table.merch input:hover,table.merch select:hover{border-color:var(--line-strong);background:#fff;}
+table.merch input:focus,table.merch select:focus{border-color:var(--teal);background:#fff;outline:none;}
+table.merch select.tagsel{font-weight:700;appearance:none;-webkit-appearance:none;text-align-last:left;}
+table.merch input.num{width:64px;min-width:64px;text-align:right;}
+table.merch td.notescol input{min-width:190px;}
+.orderflag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.merchnotes{background:var(--amber-tint);border:1px solid #F0DCC4;border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.merchnotes h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--amber);}
+.merchnotes textarea{width:100%;border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:13px;min-height:64px;resize:vertical;background:#fff;}
+.merchnotes .readout{font-size:13px;white-space:pre-wrap;line-height:1.5;}
+
 @media (max-width:720px){
   .field-row{grid-template-columns:1fr;}
   .templist-row{grid-template-columns:1fr;}
@@ -230,17 +276,46 @@ const dbFs = getFirestore(fbApp);
 const COLLECTION = 'designPlanner'; // one flat collection, doc id = storage key
 
 const STATUSES = [
+  {id:'not_started', label:'Not started', short:'—', color:'slate'},
+  {id:'ready', label:'Ready to request', short:'READY', color:'blue'},
+  {id:'requested', label:'Requested', short:'REQUESTED', color:'amber'},
+  {id:'in_progress', label:'In progress', short:'IN PROGRESS', color:'amber'},
+  {id:'awaiting_approval', label:'Awaiting approval', short:'AWAITING APP.', color:'purple'},
+  {id:'amendments_required', label:'Amendments required', short:'AMENDS', color:'red'},
+  {id:'re_requested', label:'Re-requested', short:'RE-REQUESTED', color:'amber'},
+  {id:'tbc', label:'TBC', short:'TBC', color:'purple'},
+  {id:'on_hold', label:'On hold', short:'HOLD', color:'red'},
+  {id:'approved', label:'Approved', short:'DESIGNED', color:'teal'},
+  {id:'complete', label:'Complete', short:'COMPLETE', color:'green'},
+  {id:'na', label:'N/A', short:'N/A', color:'slate'},
+];
+/* Merch — items designed here but ordered through an outside supplier
+   (lanyards, bags, badges). Statuses are deliberately separate from the
+   design statuses above because the workflow ends in "ordered", not "printed". */
+const MERCH_DESIGN_STATUSES = [
   {id:'not_started', label:'Not started', color:'slate'},
-  {id:'ready', label:'Ready to request', color:'blue'},
-  {id:'requested', label:'Requested', color:'amber'},
+  {id:'tbc', label:'TBC', color:'purple'},
+  {id:'with_sponsor', label:'With sponsor', color:'blue'},
   {id:'in_progress', label:'In progress', color:'amber'},
-  {id:'awaiting_approval', label:'Awaiting approval', color:'purple'},
-  {id:'amendments_required', label:'Amendments required', color:'red'},
-  {id:'re_requested', label:'Re-requested', color:'amber'},
-  {id:'approved', label:'Approved', color:'teal'},
-  {id:'complete', label:'Complete', color:'green'},
+  {id:'designed', label:'Designed', color:'teal'},
   {id:'na', label:'N/A', color:'slate'},
 ];
+const MERCH_APPROVAL_STATUSES = [
+  {id:'not_sent', label:'Not sent', color:'slate'},
+  {id:'ready_to_send', label:'Ready to send', color:'blue'},
+  {id:'awaiting', label:'Awaiting sponsor', color:'amber'},
+  {id:'approved', label:'Approved', color:'teal'},
+  {id:'changes', label:'Changes needed', color:'red'},
+  {id:'na', label:'N/A', color:'slate'},
+];
+const MERCH_ORDER_STATUSES = [
+  {id:'not_ordered', label:'Not ordered', color:'slate'},
+  {id:'quote', label:'Quote requested', color:'blue'},
+  {id:'ordered', label:'Ordered', color:'amber'},
+  {id:'delivered', label:'Delivered', color:'green'},
+];
+const DEFAULT_MERCH_ITEMS = ['Lanyard','Bag','Badge','Water bottle','Notepad','Pen'];
+const DEFAULT_MERCH_NOTES = "Order no earlier than 3 months before the event.\nLanyard: delegate = coloured, exhibitor = white. Bag: one colour only.";
 const AMEND_STATUSES = [
   {id:'requested', label:'Requested', color:'amber'},
   {id:'in_progress', label:'In progress', color:'amber'},
@@ -266,7 +341,7 @@ function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T00:00:00'); if(i
 function fmtDateTime(iso){ const dt=new Date(iso); return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
 function daysUntil(d){ if(!d) return null; const today=new Date(); today.setHours(0,0,0,0); const target=new Date(d+'T00:00:00'); return Math.round((target-today)/86400000); }
 function weeksUntil(d){ const days=daysUntil(d); if(days===null) return null; return Math.floor(days/7); }
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function statusMeta(list,id){ return list.find(s=>s.id===id) || list[0]; }
 
 function toast(msg, isErr){
@@ -306,23 +381,30 @@ async function slist(prefix, shared){
 const DB = {
   template: [],
   designers: ['Jamie','Seamus'],
-  settings: { thresholds:{onTrack:6,keepMoving:4,attention:2}, sponsorLevels:['Headline Sponsor','Gold Sponsor','Keynote Sponsor','Zone Sponsor','Exhibitor','Partner'], mondayBoardId:'' },
+  settings: { thresholds:{onTrack:6,keepMoving:4,attention:2}, sponsorLevels:['Headline Sponsor','Gold Sponsor','Keynote Sponsor','Zone Sponsor','Exhibitor','Partner'], mondayBoardId:'',
+              merchItems:[...DEFAULT_MERCH_ITEMS], merchLeadMonths:3, merchNotes:DEFAULT_MERCH_NOTES },
   events: {},        // id -> event object
   eventOrder: [],     // array of ids, newest first
   designs: {},        // eventId -> array
   sponsors: {},        // eventId -> array
   amendments: {},        // eventId -> array
+  merch: [],          // flat list across all events — one row per item per sponsor
 };
 let currentUser = '';
 
 async function loadAll(){
-  const [tpl, desg, sett, evIndex] = await Promise.all([
+  const [tpl, desg, sett, evIndex, merchRaw] = await Promise.all([
     sget('template', true), sget('designers', true), sget('settings', true),
-    sget('eventIndex', true)
+    sget('eventIndex', true), sget('merch', true)
   ]);
   DB.template = tpl ? JSON.parse(tpl) : DEFAULT_TEMPLATE_NAMES.map((n,i)=>({id:uid('tpl'),name:n,order:i,dimensions:'',designer:'',instructions:'',sponsorsCommon:false}));
   DB.designers = desg ? JSON.parse(desg) : DB.designers;
-  DB.settings = sett ? JSON.parse(sett) : DB.settings;
+  DB.settings = sett ? {...DB.settings, ...JSON.parse(sett)} : DB.settings;
+  // backfill keys added after this browser last saved settings
+  if(!Array.isArray(DB.settings.merchItems) || !DB.settings.merchItems.length) DB.settings.merchItems = [...DEFAULT_MERCH_ITEMS];
+  if(typeof DB.settings.merchLeadMonths !== 'number') DB.settings.merchLeadMonths = 3;
+  if(typeof DB.settings.merchNotes !== 'string') DB.settings.merchNotes = DEFAULT_MERCH_NOTES;
+  DB.merch = merchRaw ? JSON.parse(merchRaw) : [];
   DB.eventOrder = evIndex ? JSON.parse(evIndex) : [];
   currentUser = localStorage.getItem('designPlannerUser') || '';
 
@@ -361,6 +443,7 @@ async function saveEventIndex(){ await sset('eventIndex', JSON.stringify(DB.even
 async function saveDesigns(eventId){ await sset('designs:'+eventId, JSON.stringify(DB.designs[eventId]||[]), true); }
 async function saveSponsors(eventId){ await sset('sponsors:'+eventId, JSON.stringify(DB.sponsors[eventId]||[]), true); }
 async function saveAmendments(eventId){ await sset('amendments:'+eventId, JSON.stringify(DB.amendments[eventId]||[]), true); }
+async function saveMerch(){ await sset('merch', JSON.stringify(DB.merch||[]), true); }
 async function saveTemplate(){ await sset('template', JSON.stringify(DB.template), true); }
 async function saveDesigners(){ await sset('designers', JSON.stringify(DB.designers), true); }
 async function saveSettings(){ await sset('settings', JSON.stringify(DB.settings), true); }
@@ -369,19 +452,22 @@ async function saveSettings(){ await sset('settings', JSON.stringify(DB.settings
    STATE
    --------------------------------------------------------------------- */
 const state = {
-  page:'dashboard',        // dashboard | event | template | timeline | settings | alldesigns
+  page:'dashboard',        // dashboard | event | merch | template | timeline | settings
   eventId:null,
-  eventTab:'overview',     // overview | planner | sponsors | amendments | activity
+  eventTab:'overview',     // overview | planner | sponsors | merch | amendments | activity
   showArchived:false,
+  dashView: localStorage.getItem('designPlannerDashView') || 'grid',  // grid | cards
+  gridHideDone:false,      // hide rows where every event is approved/complete/N-A
+  gridHideEmpty:false,     // hide rows no event has actually started
   designFilter:'all',
   designerFilter:'all',
+  merchEventFilter:'all',
+  merchItemFilter:'all',
+  merchNotesEditing:false,
   drawerDesignId:null,
   drawerAmendId:null,
   searchQuery:'',
   modal:null,               // {type:'newEvent'|'confirmDelete'|...}
-  selectedDesignIds:[],      // bulk-delete selections in the current event's planner
-  allDesignsEventFilter:'all',
-  allDesignsStatusFilter:'all',
 };
 
 function setState(patch){ Object.assign(state, patch); render(); }
@@ -433,7 +519,7 @@ function render(){
 
 function renderTopbar(){
   const navItems = [
-    ['dashboard','Dashboard'],['alldesigns','All Designs'],['timeline','Requests Timeline'],['template','Design Template'],['settings','Settings']
+    ['dashboard','Dashboard'],['merch','Merch & Orders'],['timeline','Requests Timeline'],['template','Design Template'],['settings','Settings']
   ];
   return `
   <div class="topbar">
@@ -454,10 +540,10 @@ function renderPage(){
   switch(state.page){
     case 'dashboard': return renderDashboard();
     case 'event': return renderEventPage();
+    case 'merch': return renderMerchPage();
     case 'template': return renderTemplatePage();
     case 'timeline': return renderTimelinePage();
     case 'settings': return renderSettingsPage();
-    case 'alldesigns': return renderAllDesignsPage();
     default: return renderDashboard();
   }
 }
@@ -467,19 +553,132 @@ function renderPage(){
    --------------------------------------------------------------------- */
 function renderDashboard(){
   const ids = DB.eventOrder.filter(id=> DB.events[id] && !!DB.events[id].archived === state.showArchived);
+  const useGrid = state.dashView==='grid' && !state.showArchived;
   return `
   <div class="pagehead">
     <div>
-      <h1>${state.showArchived?'Archived events':'Active events'}</h1>
-      <div class="sub">${ids.length} event${ids.length===1?'':'s'} ${state.showArchived?'archived':'in flight'}</div>
+      <h1>${state.showArchived?'Archived events':'Every event, every design'}</h1>
+      <div class="sub">${ids.length} event${ids.length===1?'':'s'} ${state.showArchived?'archived':'in flight'}${useGrid?' · change any status straight from the grid':''}</div>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      ${!state.showArchived?`
+      <div class="viewswitch">
+        <button class="${state.dashView==='grid'?'active':''}" data-dashview="grid">Grid</button>
+        <button class="${state.dashView==='cards'?'active':''}" data-dashview="cards">Cards</button>
+      </div>`:''}
       <button class="btn" data-action="toggle-archived">${state.showArchived?'← Back to active':'View archived'}</button>
       ${!state.showArchived?'<button class="btn btn-primary" data-action="open-new-event">+ Add New Event</button>':''}
     </div>
   </div>
-  ${ids.length===0 ? renderEmpty('🎪','No events here yet', state.showArchived? "Nothing archived. That's a good thing.":"Kick things off — add your first event and I'll load in the standard design list automatically.", state.showArchived?null:['open-new-event','+ Add New Event']) : `
-  <div class="grid-cards">${ids.map(id=>renderEventCard(id)).join('')}</div>`}
+  ${ids.length===0
+    ? renderEmpty('🎪','No events here yet', state.showArchived? "Nothing archived. That's a good thing.":"Kick things off — add your first event and I'll load in the standard design list automatically.", state.showArchived?null:['open-new-event','+ Add New Event'])
+    : (useGrid ? renderMasterGrid(ids) : `<div class="grid-cards">${ids.map(id=>renderEventCard(id)).join('')}</div>`)}
+  `;
+}
+
+/* ---------------------------------------------------------------------
+   MASTER GRID — the whole programme on one screen. Design items down
+   the side, events across the top, live status in every cell. Replaces
+   the old colour-coded spreadsheet.
+   --------------------------------------------------------------------- */
+function buildGridRows(eventIds){
+  // Row order: master template order first, then any custom designs, alphabetically.
+  const tplOrder = new Map();
+  [...DB.template].sort((a,b)=>a.order-b.order).forEach((t,i)=> tplOrder.set(t.name.toLowerCase(), i));
+  const names = new Map(); // lowercase -> display name
+  eventIds.forEach(id=> (DB.designs[id]||[]).forEach(d=>{
+    if(!names.has(d.name.toLowerCase())) names.set(d.name.toLowerCase(), d.name);
+  }));
+  return [...names.entries()]
+    .sort((a,b)=>{
+      const ai = tplOrder.has(a[0]) ? tplOrder.get(a[0]) : 9000;
+      const bi = tplOrder.has(b[0]) ? tplOrder.get(b[0]) : 9000;
+      if(ai!==bi) return ai-bi;
+      return a[1].localeCompare(b[1]);
+    })
+    .map(([key,display])=>({key, name:display}));
+}
+
+function renderMasterGrid(eventIds){
+  // Columns: soonest print deadline first, so the most urgent event reads left.
+  const cols = [...eventIds].sort((a,b)=>{
+    const da = DB.events[a].printDeadline||'9999-12-31';
+    const db2 = DB.events[b].printDeadline||'9999-12-31';
+    return da.localeCompare(db2);
+  });
+  let rows = buildGridRows(cols);
+
+  const cellFor = (eventId,rowKey)=> (DB.designs[eventId]||[]).find(d=>d.name.toLowerCase()===rowKey);
+  const DONE = ['approved','complete','na'];
+
+  if(state.gridHideDone){
+    rows = rows.filter(r=> cols.some(id=>{ const d=cellFor(id,r.key); return d && !DONE.includes(d.status); }));
+  }
+  if(state.gridHideEmpty){
+    rows = rows.filter(r=> cols.some(id=>{ const d=cellFor(id,r.key); return d && d.status!=='not_started'; }));
+  }
+
+  if(!rows.length){
+    return renderEmpty('🔎','Nothing matches those filters','Every row is either untouched or finished. Turn a filter off to see the full picture.',null)
+      + `<div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-sm" data-action="grid-show-all">Show every row</button></div>`;
+  }
+
+  return `
+  <div class="filterbar">
+    <button class="chip ${state.gridHideEmpty?'active':''}" data-gridtoggle="gridHideEmpty">Hide untouched rows</button>
+    <button class="chip ${state.gridHideDone?'active':''}" data-gridtoggle="gridHideDone">Hide finished rows</button>
+    <div style="flex:1;"></div>
+    <span class="small-muted">${rows.length} design item${rows.length===1?'':'s'} · ${cols.length} event${cols.length===1?'':'s'}</span>
+  </div>
+  <div class="gridwrap">
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th class="rowhead">Design item</th>
+        ${cols.map(id=>{
+          const ev = DB.events[id];
+          const days = daysUntil(ev.printDeadline);
+          const urg = urgencyLevel(weeksUntil(ev.printDeadline));
+          return `<th class="cell">
+            <div class="colname">${escapeHtml(ev.name)}</div>
+            <div class="colmeta" style="color:var(--${urg.cls},var(--slate));">
+              ${days===null ? 'No deadline' : (days<0 ? Math.abs(days)+'d overdue' : days+'d left')}
+            </div>
+            <button class="cellopen" data-open-event="${id}" style="margin-top:4px;">Open →</button>
+          </th>`;
+        }).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(r=>`
+      <tr>
+        <td class="rowhead">${escapeHtml(r.name)}</td>
+        ${cols.map(id=>{
+          const d = cellFor(id, r.key);
+          if(!d){
+            return `<td class="cell"><button class="cellblank" data-add-to-event="${id}" data-name="${escapeHtml(r.name)}" title="Add this design to ${escapeHtml(DB.events[id].name)}">+ add</button></td>`;
+          }
+          const sm = statusMeta(STATUSES, d.status);
+          return `<td class="cell" style="background:${d.status==='na'?'#F7F6F3':'transparent'};">
+            <select class="cellsel" data-grid-status="${id}::${d.id}"
+              style="background:var(--${sm.color}-tint,var(--slate-tint));color:var(--${sm.color},var(--slate));">
+              ${STATUSES.map(s=>`<option value="${s.id}" ${s.id===d.status?'selected':''}>${escapeHtml(s.short||s.label)}</option>`).join('')}
+            </select>
+            <button class="cellopen" data-grid-open="${id}::${d.id}">details</button>
+          </td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  </div>
+  <div class="gridkey">
+    <span>Key:</span>
+    ${['ready','requested','awaiting_approval','amendments_required','tbc','on_hold','approved','complete','na'].map(id=>{
+      const s = STATUSES.find(x=>x.id===id);
+      return pillHtml(s.label, s.color);
+    }).join('')}
+  </div>
   `;
 }
 
@@ -528,7 +727,7 @@ function renderEventCard(id){
 function renderEventPage(){
   const ev = DB.events[state.eventId];
   if(!ev) return renderEmpty('🤔','Event not found','It may have been deleted. Head back to the dashboard.',['nav-dashboard','← Back to dashboard']);
-  const tabs = [['overview','Overview'],['planner','Design Planner'],['sponsors','Sponsors'],['amendments','Amendments'],['activity','Activity']];
+  const tabs = [['overview','Overview'],['planner','Design Planner'],['sponsors','Sponsors'],['merch','Merch'],['amendments','Amendments'],['activity','Activity']];
   return `
   <div class="pagehead">
     <div>
@@ -551,6 +750,7 @@ function renderEventPage(){
   ${state.eventTab==='overview'?renderEventOverview(ev):''}
   ${state.eventTab==='planner'?renderEventPlanner(ev):''}
   ${state.eventTab==='sponsors'?renderEventSponsors(ev):''}
+  ${state.eventTab==='merch'?renderEventMerch(ev):''}
   ${state.eventTab==='amendments'?renderEventAmendments(ev):''}
   ${state.eventTab==='activity'?renderEventActivity(ev):''}
   `;
@@ -608,10 +808,6 @@ function renderEventPlanner(ev){
   else if(state.designFilter!=='all') designs = designs.filter(d=>d.status===state.designFilter);
   if(state.designerFilter!=='all') designs = designs.filter(d=>d.designer===state.designerFilter);
 
-  const selectedCount = state.selectedDesignIds.length;
-  const visibleIds = designs.map(d=>d.id);
-  const allVisibleSelected = visibleIds.length>0 && visibleIds.every(id=>state.selectedDesignIds.includes(id));
-
   return `
   <div class="filterbar">
     ${filters.map(f=>`<button class="chip ${state.designFilter===f?'active':''}" data-designfilter="${f}">${filterLabels[f]}</button>`).join('')}
@@ -620,21 +816,18 @@ function renderEventPlanner(ev){
       ${DB.designers.map(d=>`<option value="${escapeHtml(d)}" ${state.designerFilter===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}
     </select>
     <div style="flex:1;"></div>
-    ${selectedCount>0 ? `<button class="btn btn-sm btn-danger" data-action="bulk-delete-designs">Delete ${selectedCount} selected</button>` : ''}
     <button class="btn btn-sm btn-primary" data-action="add-design">+ Add design</button>
   </div>
   ${designs.length===0 ? renderEmpty('🎨','No designs match','Try a different filter, or add a custom design request for this event.',['add-design','+ Add design']) : `
   <div class="card" style="padding:0;overflow-x:auto;">
   <table>
-    <thead><tr><th style="width:32px;"><input type="checkbox" id="selectall-designs" ${allVisibleSelected?'checked':''}></th><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Sponsors</th><th>Deadline</th><th></th></tr></thead>
+    <thead><tr><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Sponsors</th><th>Deadline</th><th></th></tr></thead>
     <tbody>
     ${designs.map(d=>{
       const sm = statusMeta(STATUSES,d.status);
       const sponsorNames = (d.sponsors||[]).map(s=>{const sp=(DB.sponsors[ev.id]||[]).find(x=>x.id===s.sponsorId); return sp?sp.name:null;}).filter(Boolean);
       const isNa = d.status==='na';
-      const checked = state.selectedDesignIds.includes(d.id);
       return `<tr class="rowlink${isNa?' row-na':''}" data-open-design="${d.id}">
-        <td onclick="event.stopPropagation()"><input type="checkbox" data-design-checkbox="${d.id}" ${checked?'checked':''}></td>
         <td><b>${escapeHtml(d.name)}</b>${d.custom?'<span class="small-muted"> · custom</span>':''}</td>
         <td onclick="event.stopPropagation()">
           <select class="statusselect" data-inline-status="${d.id}" style="background:var(--${sm.color}-tint,var(--slate-tint));color:var(--${sm.color},var(--slate));border-color:var(--${sm.color},var(--line-strong));">
@@ -687,6 +880,18 @@ function renderEventSponsors(ev){
   `;
 }
 
+function renderEventMerch(ev){
+  const rows = (DB.merch||[]).filter(r=>r.eventId===ev.id);
+  return `
+  <div class="pagehead" style="margin-bottom:14px;">
+    <div><h1 style="font-size:18px;">Merch for this event</h1><div class="sub">Items ordered through the supplier rather than printed with everything else.</div></div>
+    <button class="btn btn-sm btn-primary" data-action="add-merch">+ Add merch line</button>
+  </div>
+  ${renderMerchNotes()}
+  ${renderMerchTable(rows, false)}
+  `;
+}
+
 function renderEventAmendments(ev){
   const amends = DB.amendments[ev.id]||[];
   return `
@@ -721,6 +926,177 @@ function renderEventActivity(ev){
   return `<div class="card"><div class="timeline">
   ${items.slice(0,80).map(a=>`<div class="tl-item"><div class="txt"><b>${escapeHtml(a.designName)}</b> — ${escapeHtml(a.text)}</div><div class="when">${fmtDateTime(a.ts)}${a.by?' · '+escapeHtml(a.by):''}</div></div>`).join('')}
   </div></div>`;
+}
+
+/* ---------------------------------------------------------------------
+   MERCH & ORDERS — items we design in-house but order through an
+   outside supplier (lanyards, bags, badges). Lives across events
+   because the supplier lead time, not the print deadline, drives it.
+   --------------------------------------------------------------------- */
+function merchOrderFrom(row){
+  // "Order no earlier than X months before" — computed from the event date.
+  const ev = row.eventId ? DB.events[row.eventId] : null;
+  if(!ev || !ev.date) return null;
+  const dt = new Date(ev.date+'T00:00:00');
+  if(isNaN(dt)) return null;
+  dt.setMonth(dt.getMonth() - (DB.settings.merchLeadMonths||3));
+  return dt.toISOString().slice(0,10);
+}
+function merchFlag(row){
+  if(row.orderStatus==='ordered') return {label:'Ordered', color:'green'};
+  if(row.orderStatus==='delivered') return {label:'Delivered', color:'green'};
+  const from = merchOrderFrom(row);
+  if(!from) return {label:'No event date', color:'slate'};
+  const daysToWindow = daysUntil(from);
+  const ev = DB.events[row.eventId];
+  const daysToEvent = ev ? daysUntil(ev.date) : null;
+  if(daysToWindow > 0) return {label:'Order from '+fmtDate(from), color:'slate'};
+  if(daysToEvent !== null && daysToEvent < 30) return {label:'Order now — event in '+daysToEvent+'d', color:'red'};
+  return {label:'Order window open', color:'amber'};
+}
+function merchEventName(row){
+  const ev = row.eventId ? DB.events[row.eventId] : null;
+  return ev ? ev.name : (row.eventLabel || '—');
+}
+
+function renderMerchPage(){
+  let rows = [...(DB.merch||[])];
+  if(state.merchEventFilter!=='all') rows = rows.filter(r=>r.eventId===state.merchEventFilter);
+  if(state.merchItemFilter!=='all') rows = rows.filter(r=>r.item===state.merchItemFilter);
+
+  const all = DB.merch||[];
+  const awaiting = all.filter(r=>['awaiting','ready_to_send'].includes(r.approvalStatus)).length;
+  const unordered = all.filter(r=>!['ordered','delivered'].includes(r.orderStatus)).length;
+  const windowOpen = all.filter(r=>{
+    if(['ordered','delivered'].includes(r.orderStatus)) return false;
+    const from = merchOrderFrom(r);
+    return from && daysUntil(from) <= 0;
+  }).length;
+
+  return `
+  <div class="pagehead">
+    <div>
+      <h1>Merch &amp; orders</h1>
+      <div class="sub">Lanyards, bags, badges — designed here, ordered through the supplier. Edit any cell directly.</div>
+    </div>
+    <button class="btn btn-primary" data-action="add-merch">+ Add merch line</button>
+  </div>
+
+  ${renderMerchNotes()}
+
+  <div class="grid-cards" style="margin-bottom:18px;">
+    <div class="card"><div class="section-title">Total lines</div><div style="font-size:20px;font-weight:700;">${all.length}</div></div>
+    <div class="card"><div class="section-title">With the sponsor</div><div style="font-size:20px;font-weight:700;">${awaiting}</div></div>
+    <div class="card"><div class="section-title">Not yet ordered</div><div style="font-size:20px;font-weight:700;">${unordered}</div></div>
+    <div class="card"><div class="section-title">Order window open</div><div style="font-size:20px;font-weight:700;color:${windowOpen>0?'var(--amber)':'inherit'};">${windowOpen}</div></div>
+  </div>
+
+  <div class="filterbar">
+    <select id="merch-eventfilter">
+      <option value="all" ${state.merchEventFilter==='all'?'selected':''}>All events</option>
+      ${DB.eventOrder.filter(id=>DB.events[id]).map(id=>`<option value="${id}" ${state.merchEventFilter===id?'selected':''}>${escapeHtml(DB.events[id].name)}</option>`).join('')}
+    </select>
+    <select id="merch-itemfilter">
+      <option value="all" ${state.merchItemFilter==='all'?'selected':''}>All items</option>
+      ${DB.settings.merchItems.map(i=>`<option value="${escapeHtml(i)}" ${state.merchItemFilter===i?'selected':''}>${escapeHtml(i)}</option>`).join('')}
+    </select>
+    <div style="flex:1;"></div>
+    <span class="small-muted">${rows.length} line${rows.length===1?'':'s'} shown</span>
+  </div>
+
+  ${renderMerchTable(rows, true)}
+  `;
+}
+
+function renderMerchNotes(){
+  if(state.merchNotesEditing){
+    return `<div class="merchnotes">
+      <h4>Supplier terms &amp; pricing</h4>
+      <textarea id="merch-notes-input">${escapeHtml(DB.settings.merchNotes||'')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-sm btn-primary" data-action="save-merch-notes">Save terms</button>
+        <button class="btn btn-sm" data-action="cancel-merch-notes">Cancel</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="merchnotes">
+    <h4>Supplier terms &amp; pricing</h4>
+    <div class="readout">${escapeHtml(DB.settings.merchNotes||'No terms recorded yet.')}</div>
+    <button class="btn btn-sm" data-action="edit-merch-notes" style="margin-top:10px;">Edit terms</button>
+  </div>`;
+}
+
+/* One table, used on the Merch page and inside each event. */
+function renderMerchTable(rows, showEventColumn){
+  if(!rows.length){
+    return renderEmpty('🎒','No merch lines yet','Add a line for each item and sponsor combination — one for the lanyard, one for the bag, and so on.',['add-merch','+ Add merch line']);
+  }
+  // Soonest event first, then item name, so the table reads in order of urgency.
+  rows.sort((a,b)=>{
+    const ea = a.eventId && DB.events[a.eventId] ? (DB.events[a.eventId].date||'9999') : '9999';
+    const eb = b.eventId && DB.events[b.eventId] ? (DB.events[b.eventId].date||'9999') : '9999';
+    if(ea!==eb) return ea.localeCompare(eb);
+    return (a.item||'').localeCompare(b.item||'');
+  });
+  const sponsorNamesAcrossEvents = [...new Set(DB.eventOrder.flatMap(id=>(DB.sponsors[id]||[]).map(s=>s.name)))];
+
+  const tagSelect = (row, field, list) => {
+    const sm = statusMeta(list, row[field]);
+    return `<select class="tagsel" data-merch-field="${field}" data-id="${row.id}"
+      style="background:var(--${sm.color}-tint,var(--slate-tint));color:var(--${sm.color},var(--slate));">
+      ${list.map(s=>`<option value="${s.id}" ${s.id===row[field]?'selected':''}>${escapeHtml(s.label)}</option>`).join('')}
+    </select>`;
+  };
+
+  return `
+  <datalist id="merchsponsors">${sponsorNamesAcrossEvents.map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+  <div class="merchwrap">
+  <table class="merch">
+    <thead><tr>
+      ${showEventColumn?'<th class="stickcol">Event</th>':''}
+      <th ${showEventColumn?'':'class="stickcol"'}>Item</th>
+      <th>Sponsor</th>
+      <th>Qty total</th><th>White</th><th>Colour 1</th><th>Colour 2</th>
+      <th>Colours</th>
+      <th>Design</th><th>Sponsor approval</th><th>Order</th>
+      <th>Order status</th>
+      <th>Added</th>
+      <th>Notes</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    ${rows.map(r=>{
+      const flag = merchFlag(r);
+      return `<tr>
+      ${showEventColumn?`<td class="stickcol">
+        <select data-merch-field="eventId" data-id="${r.id}">
+          <option value="">—</option>
+          ${DB.eventOrder.filter(id=>DB.events[id]).map(id=>`<option value="${id}" ${r.eventId===id?'selected':''}>${escapeHtml(DB.events[id].name)}</option>`).join('')}
+        </select></td>`:''}
+      <td ${showEventColumn?'':'class="stickcol"'}>
+        <select data-merch-field="item" data-id="${r.id}">
+          ${DB.settings.merchItems.map(i=>`<option value="${escapeHtml(i)}" ${r.item===i?'selected':''}>${escapeHtml(i)}</option>`).join('')}
+          ${DB.settings.merchItems.includes(r.item)?'':`<option value="${escapeHtml(r.item||'')}" selected>${escapeHtml(r.item||'—')}</option>`}
+        </select></td>
+      <td><input data-merch-field="sponsor" data-id="${r.id}" value="${escapeHtml(r.sponsor||'')}" list="merchsponsors" placeholder="Sponsor"></td>
+      <td><input class="num" data-merch-field="qtyTotal" data-id="${r.id}" value="${escapeHtml(r.qtyTotal||'')}"></td>
+      <td><input class="num" data-merch-field="qtyWhite" data-id="${r.id}" value="${escapeHtml(r.qtyWhite||'')}"></td>
+      <td><input class="num" data-merch-field="qtyColour1" data-id="${r.id}" value="${escapeHtml(r.qtyColour1||'')}"></td>
+      <td><input class="num" data-merch-field="qtyColour2" data-id="${r.id}" value="${escapeHtml(r.qtyColour2||'')}"></td>
+      <td><input data-merch-field="colours" data-id="${r.id}" value="${escapeHtml(r.colours||'')}" placeholder="e.g. dark purple"></td>
+      <td>${tagSelect(r,'designStatus',MERCH_DESIGN_STATUSES)}</td>
+      <td>${tagSelect(r,'approvalStatus',MERCH_APPROVAL_STATUSES)}</td>
+      <td><span class="orderflag" style="background:var(--${flag.color}-tint,var(--slate-tint));color:var(--${flag.color},var(--slate));">${escapeHtml(flag.label)}</span></td>
+      <td>${tagSelect(r,'orderStatus',MERCH_ORDER_STATUSES)}</td>
+      <td><input type="date" data-merch-field="dateAdded" data-id="${r.id}" value="${r.dateAdded||''}" style="min-width:130px;"></td>
+      <td class="notescol"><input data-merch-field="notes" data-id="${r.id}" value="${escapeHtml(r.notes||'')}" placeholder="Notes"></td>
+      <td><button class="icon-btn" data-action="delete-merch" data-id="${r.id}" title="Delete line">✕</button></td>
+    </tr>`;}).join('')}
+    </tbody>
+  </table>
+  </div>
+  <div class="small-muted" style="margin-top:10px;">Order window is worked out from the event date minus ${DB.settings.merchLeadMonths} month${DB.settings.merchLeadMonths===1?'':'s'} — change that in Settings.</div>
+  `;
 }
 
 /* ---------------------------------------------------------------------
@@ -759,62 +1135,10 @@ function renderTemplatePage(){
 }
 
 /* ---------------------------------------------------------------------
-   ALL DESIGNS PAGE — every design, from every event, side by side.
-   --------------------------------------------------------------------- */
-function renderAllDesignsPage(){
-  const filterEvent = state.allDesignsEventFilter;
-  const filterStatus = state.allDesignsStatusFilter;
-  let rows = [];
-  DB.eventOrder.forEach(id=>{
-    const ev = DB.events[id];
-    if(!ev) return;
-    (DB.designs[id]||[]).forEach(d=> rows.push({ev,d}));
-  });
-  if(filterEvent!=='all') rows = rows.filter(r=>r.ev.id===filterEvent);
-  if(filterStatus!=='all') rows = rows.filter(r=>r.d.status===filterStatus);
-
-  return `
-  <div class="pagehead">
-    <div><h1>All Designs</h1><div class="sub">Every design across every event, side by side — ${rows.length} shown.</div></div>
-  </div>
-  <div class="filterbar">
-    <select id="alldesigns-event-filter">
-      <option value="all">All events</option>
-      ${DB.eventOrder.map(id=>`<option value="${id}" ${filterEvent===id?'selected':''}>${escapeHtml(DB.events[id].name)}</option>`).join('')}
-    </select>
-    <select id="alldesigns-status-filter">
-      <option value="all">All statuses</option>
-      ${STATUSES.map(s=>`<option value="${s.id}" ${filterStatus===s.id?'selected':''}>${s.label}</option>`).join('')}
-    </select>
-  </div>
-  ${rows.length===0 ? renderEmpty('🗂️','Nothing to show','No designs match this filter.',null) : `
-  <div class="card" style="padding:0;overflow-x:auto;">
-  <table>
-    <thead><tr><th>Event</th><th>Design</th><th>Status</th><th>Designer</th><th>Requested by</th><th>Requested on</th><th>Deadline</th></tr></thead>
-    <tbody>
-    ${rows.map(({ev,d})=>{
-      const sm = statusMeta(STATUSES,d.status);
-      return `<tr class="rowlink" data-open-alldesign="${ev.id}::${d.id}">
-        <td>${escapeHtml(ev.name)}</td>
-        <td><b>${escapeHtml(d.name)}</b>${d.custom?'<span class="small-muted"> · custom</span>':''}</td>
-        <td>${pillHtml(sm.label,sm.color)}</td>
-        <td>${escapeHtml(d.designer||'—')}</td>
-        <td>${escapeHtml(d.requestedBy||'—')}</td>
-        <td>${d.requestedDate? fmtDateTime(d.requestedDate) : '<span class="small-muted">—</span>'}</td>
-        <td>${d.deadline? fmtDate(d.deadline) : '<span class="small-muted">—</span>'}</td>
-      </tr>`;
-    }).join('')}
-    </tbody>
-  </table>
-  </div>`}
-  `;
-}
-
-/* ---------------------------------------------------------------------
    REQUESTS TIMELINE PAGE — every requested design, across every active
    event, sorted by deadline. Drops off once approved or complete.
    --------------------------------------------------------------------- */
-function getTimelineRows(){
+function renderTimelinePage(){
   const activeStatuses = ['requested','in_progress','awaiting_approval','amendments_required','re_requested'];
   let rows = [];
   DB.eventOrder.forEach(id=>{
@@ -832,15 +1156,9 @@ function getTimelineRows(){
     if(b.effectiveDeadline) return 1;
     return 0;
   });
-  return rows;
-}
-
-function renderTimelinePage(){
-  const rows = getTimelineRows();
   return `
   <div class="pagehead">
     <div><h1>Requests Timeline</h1><div class="sub">Every design that's been requested, across all active events, ordered by deadline. Drops off this list once it's approved or complete.</div></div>
-    ${rows.length>0 ? `<button class="btn btn-sm" data-action="export-timeline-csv">⬇ Export CSV</button>` : ''}
   </div>
   ${rows.length===0 ? renderEmpty('📋','Nothing outstanding','Once a design is marked "Requested" or later, it will show up here until it is approved.',null) : `
   <div class="card" style="padding:0;overflow-x:auto;">
@@ -894,6 +1212,16 @@ function renderSettingsPage(){
       <button class="btn btn-sm" data-action="add-level">+ Add level</button>
     </div>
     <div class="card">
+      <div class="section-title">Merch &amp; orders</div>
+      <div class="field"><label>Order no earlier than this many months before the event</label><input type="number" id="th-merchlead" value="${DB.settings.merchLeadMonths}"></div>
+      <button class="btn btn-sm btn-primary" data-action="save-merch-lead">Save lead time</button>
+      <div class="section-title" style="margin-top:16px;">Merch item types</div>
+      ${DB.settings.merchItems.map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);">
+        <span>${escapeHtml(i)}</span><button class="icon-btn" data-action="remove-merch-item" data-name="${escapeHtml(i)}">✕</button></div>`).join('')}
+      <div class="field" style="margin-top:10px;"><input id="new-merch-item" placeholder="e.g. Tote bag"></div>
+      <button class="btn btn-sm" data-action="add-merch-item">+ Add item type</button>
+    </div>
+    <div class="card">
       <div class="section-title">Monday.com integration</div>
       <div class="field"><label>Board ID</label><input id="th-mondayboard" value="${escapeHtml(DB.settings.mondayBoardId||'')}" placeholder="e.g. 1234567890"></div>
       <p class="hint" style="margin-bottom:10px;">Find this in the board's URL: monday.com/boards/<b>1234567890</b>. This ID isn't secret — it's fine to store here. The actual API token lives only on the server, in Netlify's environment variables, never in this file.</p>
@@ -926,6 +1254,10 @@ function renderSearchResults(){
     (DB.amendments[id]||[]).forEach(a=>{
       if(a.title.toLowerCase().includes(q) || (a.description||'').toLowerCase().includes(q)) results.push({type:'Amendment',label:a.title+' — '+ev.name,eventId:id,amendId:a.id});
     });
+  });
+  (DB.merch||[]).forEach(r=>{
+    const hay = [r.item,r.sponsor,r.colours,r.notes,merchEventName(r)].join(' ').toLowerCase();
+    if(hay.includes(q)) results.push({type:'Merch',label:(r.item||'Merch')+(r.sponsor?' · '+r.sponsor:'')+' — '+merchEventName(r), merch:true, eventId:r.eventId||null});
   });
   return `
   <div class="pagehead"><div><h1>Search results</h1><div class="sub">${results.length} match${results.length===1?'':'es'} for "${escapeHtml(state.searchQuery)}"</div></div></div>
@@ -994,11 +1326,8 @@ function renderDesignDrawer(){
     <div class="drawer-body">
 
       <div class="subpanel">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h4 style="margin:0;">Design information</h4>
-          <button class="btn btn-sm btn-danger" data-action="delete-design">Delete design</button>
-        </div>
-        <div class="field-row" style="margin-top:12px;">
+        <h4>Design information</h4>
+        <div class="field-row">
           <div class="field"><label>Design title</label><input data-d-field="name" value="${escapeHtml(d.name)}"></div>
           <div class="field"><label>Status</label>
             <select data-d-field="status">${STATUSES.map(s=>`<option value="${s.id}" ${s.id===d.status?'selected':''}>${s.label}</option>`).join('')}</select>
@@ -1177,15 +1506,6 @@ function renderModal(){
       <button class="btn" data-action="close-modal">Cancel</button>
       <button class="btn btn-danger" data-action="confirm-delete">Delete permanently</button>
     </div>`;
-  } else if(m.type==='confirmBulkDeleteDesigns'){
-    const n = state.selectedDesignIds.length;
-    inner = `
-    <h2>Delete ${n} design${n===1?'':'s'}?</h2>
-    <div class="sub">This permanently removes ${n===1?'it':'them'} — files, history, everything. Cannot be undone.</div>
-    <div class="modal-actions">
-      <button class="btn" data-action="close-modal">Cancel</button>
-      <button class="btn btn-danger" data-action="confirm-bulk-delete-designs">Delete permanently</button>
-    </div>`;
   } else if(m.type==='addDesign'){
     inner = `
     <h2>Add design request</h2>
@@ -1254,20 +1574,50 @@ function bindGlobalEvents(){
   const app = document.getElementById('app');
 
   // nav
-  app.querySelectorAll('[data-nav]').forEach(el=> el.onclick = ()=> setState({page:el.dataset.nav, searchQuery:'', selectedDesignIds:[]}));
+  app.querySelectorAll('[data-nav]').forEach(el=> el.onclick = ()=> setState({page:el.dataset.nav, searchQuery:'', merchNotesEditing:false}));
   const gs = document.getElementById('globalsearch');
   if(gs){ gs.oninput = ()=>{ state.searchQuery = gs.value; render(); document.getElementById('globalsearch').focus(); document.getElementById('globalsearch').setSelectionRange(gs.value.length,gs.value.length); }; }
   const userbtn = document.getElementById('userchipbtn');
   if(userbtn) userbtn.onclick = ()=> setState({modal:{type:'setUser'}});
 
   // dashboard
-  app.querySelectorAll('[data-open-event]').forEach(el=> el.onclick = ()=> setState({page:'event', eventId:el.dataset.openEvent, eventTab:'overview', selectedDesignIds:[]}));
+  app.querySelectorAll('[data-open-event]').forEach(el=> el.onclick = (e)=>{ e.stopPropagation(); setState({page:'event', eventId:el.dataset.openEvent, eventTab:'overview'}); });
   bindAction(app,'toggle-archived', ()=> setState({showArchived:!state.showArchived}));
   bindAction(app,'open-new-event', ()=> setState({modal:{type:'newEvent'}}));
+  app.querySelectorAll('[data-dashview]').forEach(el=> el.onclick = ()=>{
+    localStorage.setItem('designPlannerDashView', el.dataset.dashview);
+    setState({dashView:el.dataset.dashview});
+  });
+
+  // master grid
+  app.querySelectorAll('[data-gridtoggle]').forEach(el=> el.onclick = ()=> setState({[el.dataset.gridtoggle]: !state[el.dataset.gridtoggle]}));
+  bindAction(app,'grid-show-all', ()=> setState({gridHideDone:false, gridHideEmpty:false}));
+  app.querySelectorAll('[data-grid-status]').forEach(el=> el.onchange = ()=>{
+    const [eventId, designId] = el.dataset.gridStatus.split('::');
+    updateGridStatus(eventId, designId, el.value);
+  });
+  app.querySelectorAll('[data-grid-open]').forEach(el=> el.onclick = ()=>{
+    const [eventId, designId] = el.dataset.gridOpen.split('::');
+    setState({eventId, drawerDesignId:designId});
+  });
+  app.querySelectorAll('[data-add-to-event]').forEach(el=> el.onclick = ()=> addDesignToEvent(el.dataset.addToEvent, el.dataset.name));
+
+  // merch
+  bindAction(app,'add-merch', addMerchRow);
+  bindAction(app,'delete-merch', (btn)=> deleteMerchRow(btn.dataset.id));
+  bindAction(app,'edit-merch-notes', ()=> setState({merchNotesEditing:true}));
+  bindAction(app,'cancel-merch-notes', ()=> setState({merchNotesEditing:false}));
+  bindAction(app,'save-merch-notes', saveMerchNotes);
+  app.querySelectorAll('[data-merch-field]').forEach(el=>{
+    const evt = el.tagName==='SELECT' ? 'onchange' : 'onblur';
+    el[evt] = ()=> updateMerchField(el.dataset.id, el.dataset.merchField, el.value);
+  });
+  const mef = document.getElementById('merch-eventfilter'); if(mef) mef.onchange = ()=> setState({merchEventFilter:mef.value});
+  const mif = document.getElementById('merch-itemfilter'); if(mif) mif.onchange = ()=> setState({merchItemFilter:mif.value});
 
   // event tabs
-  app.querySelectorAll('[data-etab]').forEach(el=> el.onclick = ()=> setState({eventTab:el.dataset.etab, selectedDesignIds:[]}));
-  bindAction(app,'nav-dashboard', ()=> setState({page:'dashboard', selectedDesignIds:[]}));
+  app.querySelectorAll('[data-etab]').forEach(el=> el.onclick = ()=> setState({eventTab:el.dataset.etab}));
+  bindAction(app,'nav-dashboard', ()=> setState({page:'dashboard'}));
   bindAction(app,'edit-event', ()=> setState({modal:{type:'editEvent',eventId:state.eventId}}));
   bindAction(app,'duplicate-event', duplicateEvent);
   bindAction(app,'archive-event', async ()=>{ const ev=DB.events[state.eventId]; ev.archived=true; await saveEvent(ev); toast('Event archived'); setState({page:'dashboard'}); });
@@ -1280,23 +1630,7 @@ function bindGlobalEvents(){
   app.querySelectorAll('[data-inline-status]').forEach(el=> el.onchange = ()=> updateDesignStatus(el.dataset.inlineStatus, el.value));
   bindAction(app,'add-design', ()=> setState({modal:{type:'addDesign'}}));
   bindAction(app,'duplicate-design', (btn)=> duplicateDesign(btn.dataset.id));
-  bindAction(app,'delete-design', ()=>{
-    const d = findDesign(state.eventId, state.drawerDesignId);
-    setState({modal:{type:'confirmDelete', label: d ? d.name : 'this design', onConfirm:'deleteDesign'}});
-  });
   app.querySelectorAll('[data-open-design]').forEach(el=> el.onclick = ()=> setState({drawerDesignId:el.dataset.openDesign}));
-
-  // bulk select / delete
-  app.querySelectorAll('[data-design-checkbox]').forEach(el=> el.onchange = ()=> toggleDesignSelection(el.dataset.designCheckbox, el.checked));
-  const selectAllEl = document.getElementById('selectall-designs');
-  if(selectAllEl){
-    selectAllEl.onchange = ()=>{
-      const visibleIds = [...app.querySelectorAll('[data-design-checkbox]')].map(x=>x.dataset.designCheckbox);
-      toggleSelectAllDesigns(selectAllEl.checked, visibleIds);
-    };
-  }
-  bindAction(app,'bulk-delete-designs', ()=> setState({modal:{type:'confirmBulkDeleteDesigns'}}));
-  bindAction(app,'confirm-bulk-delete-designs', bulkDeleteDesignsConfirmed);
 
   // sponsors tab
   bindAction(app,'add-sponsor-new', ()=> setState({modal:{type:'sponsorForm'}}));
@@ -1318,24 +1652,13 @@ function bindGlobalEvents(){
     el[ev2] = ()=> updateTemplateField(el.dataset.id, el.dataset.tplField, el.type==='checkbox'?el.checked:el.value);
   });
 
-  // all designs page
-  const adef = document.getElementById('alldesigns-event-filter'); if(adef) adef.onchange = ()=> setState({allDesignsEventFilter:adef.value});
-  const adsf = document.getElementById('alldesigns-status-filter'); if(adsf) adsf.onchange = ()=> setState({allDesignsStatusFilter:adsf.value});
-  app.querySelectorAll('[data-open-alldesign]').forEach(el=>{
-    el.onclick = ()=>{
-      const [eventId, designId] = el.dataset.openAlldesign.split('::');
-      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId, selectedDesignIds:[]});
-    };
-  });
-
   // timeline page
   app.querySelectorAll('[data-open-timeline]').forEach(el=>{
     el.onclick = ()=>{
       const [eventId, designId] = el.dataset.openTimeline.split('::');
-      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId, selectedDesignIds:[]});
+      setState({page:'event', eventId, eventTab:'planner', drawerDesignId:designId});
     };
   });
-  bindAction(app,'export-timeline-csv', exportTimelineCSV);
 
   // settings
   bindAction(app,'save-thresholds', saveThresholds);
@@ -1344,6 +1667,9 @@ function bindGlobalEvents(){
   bindAction(app,'remove-designer', (btn)=> removeDesigner(btn.dataset.name));
   bindAction(app,'add-level', addLevel);
   bindAction(app,'remove-level', (btn)=> removeLevel(btn.dataset.name));
+  bindAction(app,'save-merch-lead', saveMerchLead);
+  bindAction(app,'add-merch-item', addMerchItem);
+  bindAction(app,'remove-merch-item', (btn)=> removeMerchItem(btn.dataset.name));
 
   // search results
   app.querySelectorAll('[data-searchresult]').forEach(el=>{
@@ -1358,8 +1684,17 @@ function bindGlobalEvents(){
         (DB.sponsors[id]||[]).forEach(s=>{ if(s.name.toLowerCase().includes(q)) results.push({eventId:id}); });
         (DB.amendments[id]||[]).forEach(a=>{ if(a.title.toLowerCase().includes(q)||(a.description||'').toLowerCase().includes(q)) results.push({eventId:id,amendId:a.id}); });
       });
+      (DB.merch||[]).forEach(r2=>{
+        const hay = [r2.item,r2.sponsor,r2.colours,r2.notes,merchEventName(r2)].join(' ').toLowerCase();
+        if(hay.includes(q)) results.push({merch:true, eventId:r2.eventId||null});
+      });
       const r = results[parseInt(el.dataset.searchresult,10)];
       if(!r) return;
+      if(r.merch){
+        state.searchQuery=''; state.page='merch';
+        state.merchEventFilter = r.eventId || 'all';
+        render(); return;
+      }
       state.searchQuery=''; state.page='event'; state.eventId=r.eventId;
       if(r.designId){ state.eventTab='planner'; state.drawerDesignId=r.designId; }
       else if(r.amendId){ state.eventTab='amendments'; state.drawerAmendId=r.amendId; }
@@ -1444,6 +1779,95 @@ async function updateDesignStatus(designId, newStatus){
   d.status = newStatus;
   await logActivity(state.eventId, designId, `Status changed from "${old}" to "${statusMeta(STATUSES,newStatus).label}"`);
   toast('Status updated');
+  render();
+}
+
+/* Grid edits carry their own event id — the grid isn't scoped to one event. */
+async function updateGridStatus(eventId, designId, newStatus){
+  const d = (DB.designs[eventId]||[]).find(x=>x.id===designId);
+  if(!d) return;
+  const old = statusMeta(STATUSES,d.status).label;
+  d.status = newStatus;
+  await logActivity(eventId, designId, `Status changed from "${old}" to "${statusMeta(STATUSES,newStatus).label}" (from the grid)`);
+  toast(`${d.name} → ${statusMeta(STATUSES,newStatus).label}`);
+  render();
+}
+
+async function addDesignToEvent(eventId, name){
+  DB.designs[eventId] = DB.designs[eventId]||[];
+  if(DB.designs[eventId].some(d=>d.name.toLowerCase()===name.toLowerCase())){ toast('That design is already on this event', true); return; }
+  const ev = DB.events[eventId];
+  const tpl = DB.template.find(t=>t.name.toLowerCase()===name.toLowerCase());
+  DB.designs[eventId].push({
+    id:uid('d'), name, status:'not_started',
+    designer:(tpl&&tpl.designer)||ev.defaultDesigner||'',
+    dimensions:(tpl&&tpl.dimensions)||'', quantity:'', deadline:'', notes:(tpl&&tpl.instructions)||'',
+    sponsors:[], files:[], custom:!tpl, requestedBy:'', requestedDate:'',
+    activity:[{id:uid('act'),ts:nowIso(),text:'Added from the grid',by:currentUser}]
+  });
+  await saveDesigns(eventId);
+  toast(`${name} added to ${ev.name}`);
+  render();
+}
+
+/* --- merch --- */
+async function addMerchRow(){
+  const eventId = state.page==='event' ? state.eventId
+    : (state.merchEventFilter!=='all' ? state.merchEventFilter : (DB.eventOrder[0]||''));
+  const row = {
+    id: uid('mr'),
+    eventId,
+    item: (state.merchItemFilter!=='all' ? state.merchItemFilter : (DB.settings.merchItems[0]||'Lanyard')),
+    sponsor:'', qtyTotal:'', qtyWhite:'', qtyColour1:'', qtyColour2:'', colours:'',
+    designStatus:'not_started', approvalStatus:'not_sent', orderStatus:'not_ordered',
+    dateAdded: new Date().toISOString().slice(0,10), notes:'',
+    createdBy: currentUser||'Unknown'
+  };
+  DB.merch = DB.merch||[];
+  DB.merch.push(row);
+  await saveMerch();
+  toast('Merch line added — fill in the details');
+  render();
+}
+async function updateMerchField(id, field, value){
+  const row = (DB.merch||[]).find(r=>r.id===id);
+  if(!row) return;
+  if(row[field]===value) return;
+  row[field]=value;
+  await saveMerch();
+  toast('Saved');
+  if(field==='eventId' || field==='item') render();
+}
+async function deleteMerchRow(id){
+  DB.merch = (DB.merch||[]).filter(r=>r.id!==id);
+  await saveMerch();
+  toast('Merch line deleted');
+  render();
+}
+async function saveMerchNotes(){
+  DB.settings.merchNotes = document.getElementById('merch-notes-input').value;
+  await saveSettings();
+  toast('Terms saved');
+  setState({merchNotesEditing:false});
+}
+async function saveMerchLead(){
+  const v = parseInt(document.getElementById('th-merchlead').value,10);
+  DB.settings.merchLeadMonths = (isNaN(v)||v<0) ? 3 : v;
+  await saveSettings();
+  toast('Lead time saved');
+  render();
+}
+async function addMerchItem(){
+  const v = document.getElementById('new-merch-item').value.trim();
+  if(!v) return;
+  if(!DB.settings.merchItems.includes(v)) DB.settings.merchItems.push(v);
+  await saveSettings();
+  toast('Item type added');
+  render();
+}
+async function removeMerchItem(name){
+  DB.settings.merchItems = DB.settings.merchItems.filter(i=>i!==name);
+  await saveSettings();
   render();
 }
 
@@ -1642,9 +2066,8 @@ async function duplicateEvent(){
 }
 
 function confirmDeleteRouter(){
-  const action = state.modal && state.modal.onConfirm;
-  if(action === 'deleteDesign') deleteDesignConfirmed();
-  else deleteEvent();
+  // currently only used for events
+  deleteEvent();
 }
 async function deleteEvent(){
   const id = state.eventId;
@@ -1653,41 +2076,6 @@ async function deleteEvent(){
   await saveEventIndex();
   toast('Event deleted');
   setState({modal:null, page:'dashboard'});
-}
-async function deleteDesignConfirmed(){
-  const designId = state.drawerDesignId;
-  const d = findDesign(state.eventId, designId);
-  DB.designs[state.eventId] = (DB.designs[state.eventId]||[]).filter(x=>x.id!==designId);
-  await saveDesigns(state.eventId);
-  toast(`"${d ? d.name : 'Design'}" deleted`);
-  setState({modal:null, drawerDesignId:null});
-}
-
-/* --- bulk design selection / delete --- */
-function toggleDesignSelection(id, checked){
-  const set = new Set(state.selectedDesignIds);
-  if(checked) set.add(id); else set.delete(id);
-  state.selectedDesignIds = [...set];
-  render();
-}
-function toggleSelectAllDesigns(checked, visibleIds){
-  if(checked){
-    const set = new Set(state.selectedDesignIds);
-    visibleIds.forEach(id=>set.add(id));
-    state.selectedDesignIds = [...set];
-  } else {
-    const remove = new Set(visibleIds);
-    state.selectedDesignIds = state.selectedDesignIds.filter(id=>!remove.has(id));
-  }
-  render();
-}
-async function bulkDeleteDesignsConfirmed(){
-  const ids = new Set(state.selectedDesignIds);
-  const n = ids.size;
-  DB.designs[state.eventId] = (DB.designs[state.eventId]||[]).filter(d=>!ids.has(d.id));
-  await saveDesigns(state.eventId);
-  toast(`${n} design${n===1?'':'s'} deleted`);
-  setState({modal:null, selectedDesignIds:[]});
 }
 
 /* --- designs --- */
@@ -1858,43 +2246,6 @@ async function submitUsername(){
   localStorage.setItem('designPlannerUser', v);
   toast('Name saved');
   setState({modal:null});
-}
-
-/* ---------------------------------------------------------------------
-   CSV EXPORT (Requests Timeline)
-   --------------------------------------------------------------------- */
-function csvEscape(v){
-  v = (v===null||v===undefined) ? '' : String(v);
-  if(/[",\n]/.test(v)){ v = '"'+v.replace(/"/g,'""')+'"'; }
-  return v;
-}
-function exportTimelineCSV(){
-  const rows = getTimelineRows();
-  const header = ['Deadline','Event','Design','Status','Designer','Requested by','Requested on'];
-  const lines = [header.join(',')];
-  rows.forEach(({ev,d,effectiveDeadline})=>{
-    const sm = statusMeta(STATUSES,d.status);
-    lines.push([
-      effectiveDeadline ? fmtDate(effectiveDeadline) : '',
-      ev.name,
-      d.name,
-      sm.label,
-      d.designer||'',
-      d.requestedBy||'',
-      d.requestedDate ? fmtDateTime(d.requestedDate) : ''
-    ].map(csvEscape).join(','));
-  });
-  const csv = lines.join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'requests-timeline-'+new Date().toISOString().slice(0,10)+'.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('CSV exported');
 }
 
 /* ---------------------------------------------------------------------
